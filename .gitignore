@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+agent/data/traces/*.json
+!agent/data/traces/.gitkeep
+benchmark/results/*.json
+dashboard/data.js
+node_modules/

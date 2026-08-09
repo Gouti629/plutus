@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-005",
+  "edge_case": "lapsed policy, loss date after expiration -> expect flag",
+  "submitted_text": "Priya Natarajan, policy POL-11045. I was backing out of my driveway on 2026-07-20 and clipped the mailbox post, denting the rear quarter panel. Estimate is around $1,800."
+}

@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-003",
+  "edge_case": "missing policy number entirely -> expect request more info",
+  "submitted_text": "Hi, I need to file a claim. Someone broke into my car last night and stole my laptop and a bag of tools from the trunk. This happened in the parking lot at my apartment complex. I don't have my policy number handy, can you look it up by my name, David Kim?"
+}

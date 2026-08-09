@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-026",
+  "edge_case": "multiple minor risk indicators combined (no time of loss + high estimate) -> expect flag",
+  "submitted_text": "David Kim, POL-11220. At some point over the last few days someone got into the detached shed and took a ride-on mower, a generator, and various tools. We're not sure exactly when since we don't check the shed daily. Total value of everything taken is around $16,000."
+}

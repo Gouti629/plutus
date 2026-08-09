@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-008",
+  "edge_case": "theft claim on a policy without comprehensive -> not covered -> expect flag",
+  "submitted_text": "Angela Brooks, policy POL-11367. My car was broken into on 2026-07-05 while parked outside my office downtown and the stereo and a set of golf clubs were taken from the back seat. Window was smashed. Damage and stolen items add up to about $2,100."
+}

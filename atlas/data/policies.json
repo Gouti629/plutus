@@ -1,0 +1,155 @@
+[
+  {
+    "policy_number": "POL-10234",
+    "policyholder_name": "Maria Alvarez",
+    "policy_type": "auto",
+    "status": "active",
+    "effective_date": "2025-11-01",
+    "expiration_date": "2026-11-01",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "collision", "limit": 50000, "deductible": 500},
+      {"coverage_id": "COV-2", "coverage_type": "comprehensive", "limit": 50000, "deductible": 500},
+      {"coverage_id": "COV-3", "coverage_type": "liability", "limit": 100000, "deductible": 0}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-RACING",
+        "description": "Damage occurring during organized racing, speed contests, or track events is excluded.",
+        "applies_to": ["auto_collision"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-10891",
+    "policyholder_name": "James Whitfield",
+    "policy_type": "homeowners",
+    "status": "active",
+    "effective_date": "2025-06-15",
+    "expiration_date": "2026-06-15",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "dwelling", "limit": 300000, "deductible": 1000},
+      {"coverage_id": "COV-2", "coverage_type": "personal_property", "limit": 150000, "deductible": 1000},
+      {"coverage_id": "COV-3", "coverage_type": "water_damage_sudden", "limit": 50000, "deductible": 1000}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-FLOOD",
+        "description": "Flood damage from rising surface water, storm surge, or overflow of a body of water is excluded. A separate flood policy is required.",
+        "applies_to": ["flood"]
+      },
+      {
+        "exclusion_id": "EXCL-GRADUAL-WATER",
+        "description": "Damage from gradual leaks, seepage, or long-term moisture intrusion is excluded; only sudden and accidental water discharge is covered.",
+        "applies_to": ["water_damage_gradual"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-11045",
+    "policyholder_name": "Priya Natarajan",
+    "policy_type": "auto",
+    "status": "lapsed",
+    "effective_date": "2025-01-15",
+    "expiration_date": "2026-01-15",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "collision", "limit": 40000, "deductible": 500},
+      {"coverage_id": "COV-2", "coverage_type": "comprehensive", "limit": 40000, "deductible": 500},
+      {"coverage_id": "COV-3", "coverage_type": "liability", "limit": 100000, "deductible": 0}
+    ],
+    "exclusions": []
+  },
+  {
+    "policy_number": "POL-11220",
+    "policyholder_name": "David Kim",
+    "policy_type": "homeowners",
+    "status": "active",
+    "effective_date": "2025-09-01",
+    "expiration_date": "2026-09-01",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "dwelling", "limit": 400000, "deductible": 1500},
+      {"coverage_id": "COV-2", "coverage_type": "personal_property", "limit": 200000, "deductible": 1500},
+      {"coverage_id": "COV-3", "coverage_type": "theft", "limit": 200000, "deductible": 1500}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-VACANCY",
+        "description": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded.",
+        "applies_to": ["theft", "fire"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-11367",
+    "policyholder_name": "Angela Brooks",
+    "policy_type": "auto",
+    "status": "active",
+    "effective_date": "2026-02-01",
+    "expiration_date": "2027-02-01",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "collision", "limit": 25000, "deductible": 1000},
+      {"coverage_id": "COV-2", "coverage_type": "liability", "limit": 50000, "deductible": 0}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-COMMERCIAL-USE",
+        "description": "Use of the vehicle for ridesharing, food delivery, or other commercial purposes is excluded.",
+        "applies_to": ["auto_collision", "auto_comprehensive"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-11502",
+    "policyholder_name": "Robert Chen",
+    "policy_type": "homeowners",
+    "status": "active",
+    "effective_date": "2025-12-01",
+    "expiration_date": "2026-12-01",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "dwelling", "limit": 350000, "deductible": 1000},
+      {"coverage_id": "COV-2", "coverage_type": "personal_property", "limit": 175000, "deductible": 1000},
+      {"coverage_id": "COV-3", "coverage_type": "water_damage_sudden", "limit": 75000, "deductible": 1000}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-EARTH-MOVEMENT",
+        "description": "Damage caused by earthquake, landslide, or other earth movement is excluded.",
+        "applies_to": ["earth_movement"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-11689",
+    "policyholder_name": "Sofia Marchetti",
+    "policy_type": "auto",
+    "status": "active",
+    "effective_date": "2025-08-20",
+    "expiration_date": "2026-08-20",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "collision", "limit": 75000, "deductible": 250},
+      {"coverage_id": "COV-2", "coverage_type": "comprehensive", "limit": 75000, "deductible": 250},
+      {"coverage_id": "COV-3", "coverage_type": "liability", "limit": 250000, "deductible": 0}
+    ],
+    "exclusions": [
+      {
+        "exclusion_id": "EXCL-UNLISTED-DRIVER",
+        "description": "Loss occurring while the vehicle is operated by a driver not listed on the policy is excluded.",
+        "applies_to": ["auto_collision"]
+      }
+    ]
+  },
+  {
+    "policy_number": "POL-11734",
+    "policyholder_name": "Marcus Devereaux",
+    "policy_type": "homeowners",
+    "status": "cancelled",
+    "effective_date": "2025-06-01",
+    "expiration_date": "2026-06-01",
+    "cancellation_date": "2026-04-15",
+    "cancellation_reason": "nonpayment of premium",
+    "coverages": [
+      {"coverage_id": "COV-1", "coverage_type": "dwelling", "limit": 275000, "deductible": 1000},
+      {"coverage_id": "COV-2", "coverage_type": "personal_property", "limit": 125000, "deductible": 1000}
+    ],
+    "exclusions": []
+  }
+]

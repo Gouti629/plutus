@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-001",
+  "edge_case": "clean auto collision, active policy, covered -> expect auto-approve",
+  "submitted_text": "My name is Maria Alvarez, policy POL-10234. On 2026-07-14 around 5:30pm I was rear-ended at a stoplight on Route 9 in Albany, NY. The other driver hit my rear bumper and trunk. Repair shop estimate came back at $4,200. No injuries."
+}

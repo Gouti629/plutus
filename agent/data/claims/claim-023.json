@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-023",
+  "edge_case": "policy number typo / not found -> expect flag",
+  "submitted_text": "This is Maria Alvarez, my policy number is POL-10239 I think - could be off by a digit. On 2026-07-17 I hit a pothole hard on the interstate and blew out both passenger-side tires and bent a rim. About $1,100 total."
+}

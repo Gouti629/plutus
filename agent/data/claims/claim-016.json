@@ -1,0 +1,5 @@
+{
+  "claim_id": "claim-016",
+  "edge_case": "extremely vague description, no usable loss type -> expect request more info",
+  "submitted_text": "Hi, filing a claim for policy POL-11045. Something happened to my car and it needs to be fixed. Can someone call me to go over the details?"
+}
