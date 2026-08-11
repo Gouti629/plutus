@@ -28,19 +28,22 @@ Every new color decision must be a token, not a one-off value, and must have
 a reason to pick a *new* token vs. reusing an existing one.
 
 `--surface-1` is deliberately translucent (`rgba(...)`, not a flat hex) in
-both themes - it's the "glass" layer: matte, near-neutral black/grey
-(`--surface-2`) underneath, with blue pulled out specifically into
-translucent panels, borders, and washes rather than tinting the neutrals
-themselves. Concretely: dark `--surface-2` is matte near-black with almost no
-hue bias (not navy); `--surface-1`, `--border`, `--row-hover`,
-`--row-selected`, and `--shadow-sm`'s ambient glow all carry the blue tint
-instead, at low opacity (`rgba(110-150, 150-170, 200-255, 0.06-0.55)` range).
-Any element using `--surface-1` should also get
-`backdrop-filter: blur(var(--glass-blur))` (+ `-webkit-` prefix) so it reads
-as glass, not just a flat translucent color - see `header`, `.list-pane`,
-`section.block`, `.back-btn`. Keep this split (neutral matte ground, blue
-glass panels) rather than reintroducing a blue-tinted neutral - that was
-tried and explicitly rejected in favor of this.
+both themes - it's the "glass" layer floating over a solid ground
+(`--surface-2`). The accent family is **violet**, not blue (blue was tried
+twice and explicitly rejected) - dark mode's ground is true pitch black
+(`--surface-2: #000000`), with violet pulled into `--surface-1`, `--border`,
+`--row-hover`, `--row-selected`, and `--shadow-sm`'s ambient glow, all at low
+opacity (`rgba(180-190, 160-170, 250-255, 0.05-0.5)` range), and `--accent`
+is a *light* lavender-violet (`#baa6fc`), not a saturated/dark one - "lighter
+violet" was specifically requested after an initial darker violet read as
+muddy. Light mode's accent is a darker violet (`#6d4fd1`) for contrast on a
+light ground, keeping the same hue family across both themes. Any element
+using `--surface-1` should also get `backdrop-filter: blur(var(--glass-blur))`
+(+ `-webkit-` prefix) so it reads as glass, not just a flat translucent color
+- see `header`, `.list-pane`, `section.block`, `.back-btn`. Status colors
+(`--status-good/warning/serious/critical`) are unrelated to this and haven't
+changed - don't retune them when iterating on the accent/neutral palette,
+they're semantic and the comparison should isolate accent+neutral choices.
 
 ## Theming - three states, not two
 
