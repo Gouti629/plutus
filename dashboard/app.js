@@ -166,39 +166,101 @@ function fieldBlock(label, value) {
 }
 
 function renderFollowUp(trace, onReprocessed) {
-  const textarea = el("textarea", { class: "followup-textarea", rows: "4" });
-  textarea.value = trace.submitted_text;
+  const extracted = trace.extracted || {};
 
-  const status = el("div", { class: "followup-status" });
-  const btn = el("button", { class: "followup-btn", type: "button" }, "Re-run extraction & decision");
-
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    btn.textContent = "Re-running…";
-    status.className = "followup-status";
-    status.textContent = "";
+  async function resumeWithPolicyNumber(policyNumber, statusEl, triggerBtn) {
+    triggerBtn.disabled = true;
+    const originalLabel = triggerBtn.textContent;
+    triggerBtn.textContent = "Resuming…";
+    statusEl.className = "followup-status";
+    statusEl.textContent = "";
     try {
-      const res = await fetch("/api/claims/process", {
+      const res = await fetch(`/api/claims/${encodeURIComponent(trace.claim_id)}/resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ claim_id: trace.claim_id, submitted_text: textarea.value }),
+        body: JSON.stringify({ policy_number: policyNumber }),
       });
       if (!res.ok) throw new Error(`server returned ${res.status}`);
       const updated = await res.json();
       updated.edge_case = trace.edge_case;
-      status.textContent = `Updated: ${decisionLabel(updated.decision)}${
+      statusEl.textContent = `Updated: ${decisionLabel(updated.decision)}${
         updated.confidence !== null && updated.confidence !== undefined ? ` (confidence ${updated.confidence.toFixed(2)})` : ""
       }`;
-      status.classList.add("ok");
+      statusEl.classList.add("ok");
       if (onReprocessed) onReprocessed(updated);
     } catch (e) {
-      status.textContent =
+      statusEl.textContent =
         "Couldn't reach the live agent. This only works when served via `dashboard/server.py` with ANTHROPIC_API_KEY set - not on a static hosted snapshot.";
-      status.classList.add("err");
+      statusEl.classList.add("err");
     } finally {
-      btn.disabled = false;
-      btn.textContent = "Re-run extraction & decision";
+      triggerBtn.disabled = false;
+      triggerBtn.textContent = originalLabel;
     }
+  }
+
+  const nameInput = el("input", {
+    type: "text",
+    class: "followup-input",
+    placeholder: "Policyholder name",
+    value: extracted.policyholder_name || "",
+  });
+  const searchBtn = el("button", { class: "followup-btn", type: "button" }, "Search Atlas");
+  const searchStatus = el("div", { class: "followup-status" });
+  const resultsEl = el("div", { class: "followup-results" });
+
+  searchBtn.addEventListener("click", async () => {
+    const name = nameInput.value.trim();
+    resultsEl.innerHTML = "";
+    searchStatus.className = "followup-status";
+    if (!name) {
+      searchStatus.textContent = "Enter a name to search.";
+      searchStatus.classList.add("err");
+      return;
+    }
+    searchBtn.disabled = true;
+    searchStatus.textContent = "Searching…";
+    try {
+      const res = await fetch(`/api/atlas/search?name=${encodeURIComponent(name)}`);
+      if (!res.ok) throw new Error(`server returned ${res.status}`);
+      const matches = await res.json();
+      searchStatus.textContent = "";
+      if (matches.length === 0) {
+        resultsEl.appendChild(el("div", { class: "followup-hint" }, "No matching policies found in Atlas."));
+      }
+      matches.forEach((m) => {
+        const matchBtn = el(
+          "button",
+          { class: "followup-match", type: "button" },
+          el("span", { class: "followup-match-id" }, m.policy_number),
+          el("span", { class: "followup-match-sub" }, `${m.policyholder_name} · ${m.policy_type} · ${m.status}`)
+        );
+        matchBtn.addEventListener("click", () => resumeWithPolicyNumber(m.policy_number, searchStatus, matchBtn));
+        resultsEl.appendChild(matchBtn);
+      });
+    } catch (e) {
+      searchStatus.textContent =
+        "Couldn't reach Atlas search. This only works when served via `dashboard/server.py`, not on a static hosted snapshot.";
+      searchStatus.classList.add("err");
+    } finally {
+      searchBtn.disabled = false;
+    }
+  });
+
+  const manualInput = el("input", { type: "text", class: "followup-input", placeholder: "e.g. POL-10234" });
+  const manualBtn = el(
+    "button",
+    { class: "followup-btn followup-btn-secondary", type: "button" },
+    "Attach manually"
+  );
+  const manualStatus = el("div", { class: "followup-status" });
+  manualBtn.addEventListener("click", () => {
+    const value = manualInput.value.trim();
+    if (!value) {
+      manualStatus.textContent = "Enter a policy number.";
+      manualStatus.classList.add("err");
+      return;
+    }
+    resumeWithPolicyNumber(value, manualStatus, manualBtn);
   });
 
   return el(
@@ -208,10 +270,14 @@ function renderFollowUp(trace, onReprocessed) {
     el(
       "p",
       { class: "followup-hint" },
-      "The agent couldn't extract a policy number from this narrative, so it can't be matched to a policy. Add it below (or edit the narrative directly) and re-run."
+      "No policy number in this submission. Search Atlas by the policyholder's name to find their real policy, or attach a number a reviewer already confirmed through another channel."
     ),
-    textarea,
-    el("div", { class: "followup-actions" }, btn, status)
+    el("div", { class: "followup-row" }, nameInput, searchBtn),
+    searchStatus,
+    resultsEl,
+    el("div", { class: "followup-divider" }, "or"),
+    el("div", { class: "followup-row" }, manualInput, manualBtn),
+    manualStatus
   );
 }
 

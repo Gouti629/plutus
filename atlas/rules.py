@@ -130,6 +130,35 @@ def check_coverage(policy_number: str, loss_type: str) -> dict:
     }
 
 
+def search_policies_by_name(name: str) -> list[dict]:
+    """Find policies whose holder name matches (case-insensitive substring).
+
+    Used when a claim narrative doesn't state a policy number but does name
+    the policyholder - lets a reviewer resolve the real policy against Atlas
+    instead of inventing a number or asking the customer to resubmit.
+    """
+    query = name.strip().lower()
+    if not query:
+        return []
+    matches = []
+    for policy in get_store().policies.values():
+        if query in policy.policyholder_name.lower():
+            matches.append(
+                {
+                    "policy_number": policy.policy_number,
+                    "policyholder_name": policy.policyholder_name,
+                    "policy_type": policy.policy_type,
+                    "status": policy.status,
+                    "evidence": {
+                        "source": f"policy:{policy.policy_number}",
+                        "text": f"{policy.policyholder_name}'s {policy.policy_type} policy "
+                        f"{policy.policy_number}, status={policy.status}.",
+                    },
+                }
+            )
+    return matches
+
+
 def check_exclusions(policy_number: str, loss_type: str) -> dict:
     """Do any exclusions on this policy apply to the given loss_type?"""
     policy = get_store().get_policy(policy_number)

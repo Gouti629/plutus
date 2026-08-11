@@ -150,6 +150,29 @@ background (`color-mix`) and the count color. If you add a new filterable
 dimension, follow this pattern rather than adding a separate, silent count
 display.
 
+## Missing-policy-number follow-up (`renderFollowUp` in app.js)
+
+Shown only when `extracted.policy_number` is null. This is an *internal
+reviewer* tool - Prism is only visible to company employees, not customers -
+so this must never let a reviewer edit or resubmit the customer's narrative
+text; that would mean fabricating what the customer said. An earlier version
+did exactly that (a textarea + re-run-extraction button) and was explicitly
+rejected for this reason.
+
+The correct shape: a reviewer resolves the *real* policy number through a
+legitimate channel - searching Atlas by the policyholder's name (often
+already extracted even when the policy number isn't - see `POST
+/api/atlas/search` and `atlas_rules.search_policies_by_name`), or a manual
+fallback field for a number obtained some other real way (a phone call,
+another internal system) - and the app resumes decisioning via `POST
+/api/claims/{claim_id}/resume`, which calls `agent.fnol_agent.resume_claim`.
+That function skips `record_extracted_fields` entirely (the narrative didn't
+change) and seeds the conversation as if extraction already happened with
+the known fields, going straight to the Atlas lookup + decision steps. If
+you add more "reviewer supplies a missing fact" follow-ups later, keep this
+shape: resolve the fact through a real source, resume from Atlas onward,
+never regenerate narrative text on the reviewer's behalf.
+
 ## JS conventions (app.js)
 
 Plain DOM manipulation through the `el(tag, attrs, ...children)` helper

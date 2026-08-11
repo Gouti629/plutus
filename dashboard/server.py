@@ -4,10 +4,14 @@ JSON API over the traces the Navigator agent has produced.
 Run from the project root with:
     uvicorn dashboard.server:app --reload
 
-GET  /api/claims            -> list of all saved traces (agent/data/traces/*.json)
-GET  /api/claims/{claim_id} -> one trace
-POST /api/claims/process    -> run a new narrative through the live agent
-                                (requires ANTHROPIC_API_KEY)
+GET  /api/claims                  -> list of all saved traces (agent/data/traces/*.json)
+GET  /api/claims/{claim_id}       -> one trace
+POST /api/claims/process          -> run a new narrative through the live agent
+                                      (requires ANTHROPIC_API_KEY)
+GET  /api/atlas/search?name=...   -> search Atlas policies by holder name
+POST /api/claims/{claim_id}/resume -> attach a reviewer-resolved policy number
+                                      to an existing claim and resume
+                                      decisioning without re-extracting
 """
 
 from __future__ import annotations
@@ -20,7 +24,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from agent.fnol_agent import DEFAULT_MODEL, process_claim
+from agent.fnol_agent import DEFAULT_MODEL, process_claim, resume_claim
+from atlas import rules as atlas_rules
 
 TRACES_DIR = Path(__file__).parent.parent / "agent" / "data" / "traces"
 STATIC_DIR = Path(__file__).parent
@@ -65,6 +70,38 @@ def process_new_claim(req: ProcessRequest) -> dict:
     trace_dict = trace.model_dump(mode="json")
     TRACES_DIR.mkdir(parents=True, exist_ok=True)
     (TRACES_DIR / f"{req.claim_id}.json").write_text(json.dumps(trace_dict, indent=2))
+    return trace_dict
+
+
+@app.get("/api/atlas/search")
+def search_atlas(name: str) -> list[dict]:
+    """Search Atlas for policies by holder name - used by the "missing
+    policy number" follow-up UI to resolve a real policy_number instead of
+    guessing one or asking the customer to resubmit."""
+    return atlas_rules.search_policies_by_name(name)
+
+
+class ResumeRequest(BaseModel):
+    policy_number: str
+
+
+@app.post("/api/claims/{claim_id}/resume")
+def resume_claim_endpoint(claim_id: str, req: ResumeRequest) -> dict:
+    """Attach a policy number a reviewer resolved (via Atlas search or a
+    real out-of-band channel) to an existing claim and resume decisioning
+    from the Atlas lookup step - not a re-run of extraction, since the
+    narrative itself hasn't changed. Needs ANTHROPIC_API_KEY.
+    """
+    path = TRACES_DIR / f"{claim_id}.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"No trace for claim_id '{claim_id}'.")
+    existing = json.loads(path.read_text())
+    extracted = {**(existing.get("extracted") or {}), "policy_number": req.policy_number}
+
+    trace = resume_claim(claim_id, existing["submitted_text"], extracted, model=DEFAULT_MODEL)
+    trace_dict = trace.model_dump(mode="json")
+    trace_dict["edge_case"] = existing.get("edge_case")
+    path.write_text(json.dumps(trace_dict, indent=2))
     return trace_dict
 
 

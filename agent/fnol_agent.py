@@ -100,19 +100,16 @@ def dispatch_tool(tool_name: str, tool_input: dict, state: AgentRunState) -> dic
     return {"error": f"Unknown tool '{tool_name}'"}
 
 
-def process_claim(
-    claim_id: str,
-    submitted_text: str,
-    model: str = DEFAULT_MODEL,
-    client: anthropic.Anthropic | None = None,
-) -> DecisionTrace:
-    """Run one claim through the Navigator loop and return its full trace."""
-    client = client or anthropic.Anthropic()
-    state = AgentRunState()
-    messages: list[dict] = [
-        {"role": "user", "content": f"New FNOL submission (claim_id={claim_id}):\n\n{submitted_text}"}
-    ]
-
+def _run_agent_loop(
+    messages: list[dict],
+    state: AgentRunState,
+    model: str,
+    client: anthropic.Anthropic,
+) -> AgentRunState:
+    """Drives tool_use <-> tool_result turns until submit_decision fires or
+    MAX_TURNS is hit. Shared by process_claim (fresh extraction) and
+    resume_claim (extraction already known - e.g. a policy number a reviewer
+    attached after the fact)."""
     for _ in range(MAX_TURNS):
         response = client.messages.create(
             model=model,
@@ -142,6 +139,10 @@ def process_claim(
         if state.done:
             break
 
+    return state
+
+
+def _build_trace(claim_id: str, submitted_text: str, state: AgentRunState, model: str) -> DecisionTrace:
     trace = DecisionTrace(
         claim_id=claim_id,
         submitted_text=submitted_text,
@@ -157,6 +158,71 @@ def process_claim(
     if not state.done:
         trace.error = "Agent did not call submit_decision within the turn limit."
     return trace
+
+
+def process_claim(
+    claim_id: str,
+    submitted_text: str,
+    model: str = DEFAULT_MODEL,
+    client: anthropic.Anthropic | None = None,
+) -> DecisionTrace:
+    """Run one claim through the Navigator loop and return its full trace."""
+    client = client or anthropic.Anthropic()
+    state = AgentRunState()
+    messages: list[dict] = [
+        {"role": "user", "content": f"New FNOL submission (claim_id={claim_id}):\n\n{submitted_text}"}
+    ]
+    state = _run_agent_loop(messages, state, model, client)
+    return _build_trace(claim_id, submitted_text, state, model)
+
+
+def resume_claim(
+    claim_id: str,
+    submitted_text: str,
+    extracted: dict,
+    model: str = DEFAULT_MODEL,
+    client: anthropic.Anthropic | None = None,
+) -> DecisionTrace:
+    """Resume a claim whose extracted fields are already known - typically
+    because a reviewer attached a policy number found via Atlas search or a
+    real out-of-band channel (a phone call, another internal system), not
+    because the customer narrative itself changed. Skips
+    record_extracted_fields entirely and goes straight to the Atlas lookup
+    and decision steps, by seeding the conversation with that tool call
+    already having "happened" with the known fields.
+    """
+    client = client or anthropic.Anthropic()
+    state = AgentRunState()
+    state.extracted = ExtractedFields(**extracted)
+
+    seed_tool_use_id = "seeded_extraction"
+    seed_result = {"recorded": True}
+    state.tool_calls.append(
+        ToolCallRecord(tool_name="record_extracted_fields", tool_input=extracted, tool_result=seed_result)
+    )
+
+    messages: list[dict] = [
+        {"role": "user", "content": f"New FNOL submission (claim_id={claim_id}):\n\n{submitted_text}"},
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": seed_tool_use_id,
+                    "name": "record_extracted_fields",
+                    "input": extracted,
+                }
+            ],
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "tool_result", "tool_use_id": seed_tool_use_id, "content": json.dumps(seed_result)}
+            ],
+        },
+    ]
+    state = _run_agent_loop(messages, state, model, client)
+    return _build_trace(claim_id, submitted_text, state, model)
 
 
 if __name__ == "__main__":
