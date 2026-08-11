@@ -19,6 +19,21 @@ function fmtMoney(v) {
   return "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
+function confidenceMeter(confidence) {
+  const pct = Math.max(0, Math.min(100, Math.round(confidence * 100)));
+  const low = confidence < LOW_CONFIDENCE_THRESHOLD;
+  return el(
+    "span",
+    { class: "confidence-meter" },
+    el(
+      "span",
+      { class: "confidence-track" },
+      el("span", { class: `confidence-fill ${low ? "low" : ""}`, style: `width:${pct}%` })
+    ),
+    el("span", { class: "confidence-label" }, confidence.toFixed(2))
+  );
+}
+
 function el(tag, attrs, ...children) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -66,7 +81,13 @@ function renderList(traces, onSelect) {
 
     const row = el(
       "div",
-      { class: `claim-row decision-${cls}`, "data-claim-id": trace.claim_id },
+      {
+        class: `claim-row decision-${cls}`,
+        "data-claim-id": trace.claim_id,
+        tabindex: "0",
+        role: "button",
+        "aria-label": `${trace.claim_id}: ${name}, ${lossType}, ${decisionLabel(trace.decision)}`,
+      },
       el(
         "div",
         { class: "claim-row-main" },
@@ -76,6 +97,12 @@ function renderList(traces, onSelect) {
       el("div", {}, ...badges)
     );
     row.addEventListener("click", () => onSelect(trace, row));
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onSelect(trace, row);
+      }
+    });
     listEl.appendChild(row);
   });
 }
@@ -116,9 +143,7 @@ function renderDetail(trace) {
       "div",
       {},
       el("span", { class: `badge badge-${cls}` }, decisionLabel(trace.decision)),
-      trace.confidence !== null && trace.confidence !== undefined
-        ? el("span", { style: "margin-left:8px;font-size:12px;color:var(--text-muted)" }, `confidence ${trace.confidence.toFixed(2)}`)
-        : null
+      trace.confidence !== null && trace.confidence !== undefined ? confidenceMeter(trace.confidence) : null
     )
   );
   pane.appendChild(header);
