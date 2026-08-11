@@ -4,16 +4,33 @@
   <meta charset="utf-8" />
   <title>Prism — FNOL Decision Trace Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
-    <h1>Prism — FNOL Decision Trace Viewer</h1>
-    <p>Every claim the Navigator agent has processed, with its full reasoning trail and cited policy evidence.</p>
+    <div class="brand">
+      <svg class="mark" width="28" height="22" viewBox="0 0 28 22" fill="none" aria-hidden="true">
+        <line class="mark-in" x1="0" y1="11" x2="10" y2="11" stroke-width="1.75" stroke-linecap="round" />
+        <path class="mark-prism" d="M10 18 L14 4 L18 18 Z" stroke-width="1.5" stroke-linejoin="round" />
+        <line class="mark-good" x1="18" y1="11" x2="27" y2="4" stroke-width="1.75" stroke-linecap="round" />
+        <line class="mark-warn" x1="18" y1="11" x2="27" y2="11" stroke-width="1.75" stroke-linecap="round" />
+        <line class="mark-crit" x1="18" y1="11" x2="27" y2="18" stroke-width="1.75" stroke-linecap="round" />
+      </svg>
+      <div>
+        <h1>Prism</h1>
+        <p>Every claim the Navigator agent has processed, with its full reasoning trail and cited policy evidence.</p>
+      </div>
+    </div>
   </header>
   <div class="layout">
     <div class="list-pane">
-      <div class="list-summary" id="list-summary">Loading claims&hellip;</div>
+      <div class="list-filters" id="list-filters" role="group" aria-label="Filter claims by decision"></div>
       <div id="claim-list"></div>
     </div>
     <div class="detail-pane" id="detail-pane">

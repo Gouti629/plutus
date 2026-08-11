@@ -3,6 +3,13 @@
 
 const LOW_CONFIDENCE_THRESHOLD = 0.7;
 
+const DECISION_FILTERS = [
+  { key: "all", label: "All", cls: "all" },
+  { key: "auto-approve intake", label: "Auto-approved", cls: "good" },
+  { key: "flag for adjuster review", label: "Flagged", cls: "critical" },
+  { key: "request more info", label: "Request info", cls: "warning" },
+];
+
 function decisionClass(decision) {
   if (decision === "auto-approve intake") return "good";
   if (decision === "request more info") return "warning";
@@ -17,6 +24,24 @@ function decisionLabel(decision) {
 function fmtMoney(v) {
   if (v === null || v === undefined) return null;
   return "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function isLowConfidence(trace) {
+  return trace.confidence !== null && trace.confidence !== undefined && trace.confidence < LOW_CONFIDENCE_THRESHOLD;
+}
+
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") node.className = v;
+    else if (k === "text") node.textContent = v;
+    else node.setAttribute(k, v);
+  }
+  for (const child of children.flat()) {
+    if (child === null || child === undefined) continue;
+    node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+  }
+  return node;
 }
 
 function confidenceMeter(confidence) {
@@ -34,20 +59,6 @@ function confidenceMeter(confidence) {
   );
 }
 
-function el(tag, attrs, ...children) {
-  const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs || {})) {
-    if (k === "class") node.className = v;
-    else if (k === "text") node.textContent = v;
-    else node.setAttribute(k, v);
-  }
-  for (const child of children.flat()) {
-    if (child === null || child === undefined) continue;
-    node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
-  }
-  return node;
-}
-
 async function loadTraces() {
   try {
     const res = await fetch("/api/claims");
@@ -59,14 +70,50 @@ async function loadTraces() {
   return [];
 }
 
-function renderList(traces, onSelect) {
+function applyFilters(traces, state) {
+  return traces.filter((t) => {
+    if (state.decision !== "all" && t.decision !== state.decision) return false;
+    if (state.lowConfidenceOnly && !isLowConfidence(t)) return false;
+    return true;
+  });
+}
+
+function renderFilters(traces, state, onChange) {
+  const container = document.getElementById("list-filters");
+  container.innerHTML = "";
+
+  DECISION_FILTERS.forEach((f) => {
+    const count = f.key === "all" ? traces.length : traces.filter((t) => t.decision === f.key).length;
+    const pressed = state.decision === f.key;
+    const tile = el(
+      "button",
+      { type: "button", class: `filter-tile filter-tile--${f.cls}`, "aria-pressed": pressed },
+      el("span", { class: "filter-count" }, String(count)),
+      el("span", { class: "filter-label" }, f.label)
+    );
+    tile.addEventListener("click", () => onChange({ ...state, decision: f.key }));
+    container.appendChild(tile);
+  });
+
+  const lowConfCount = traces.filter(isLowConfidence).length;
+  const lowConfTile = el(
+    "button",
+    { type: "button", class: "filter-tile filter-tile--lowconf", "aria-pressed": state.lowConfidenceOnly },
+    el("span", { class: "filter-count" }, String(lowConfCount)),
+    el("span", { class: "filter-label" }, "Low confidence")
+  );
+  lowConfTile.addEventListener("click", () => onChange({ ...state, lowConfidenceOnly: !state.lowConfidenceOnly }));
+  container.appendChild(lowConfTile);
+}
+
+function renderList(traces, onSelect, selectedClaimId) {
   const listEl = document.getElementById("claim-list");
-  const summaryEl = document.getElementById("list-summary");
   listEl.innerHTML = "";
 
-  const flagged = traces.filter((t) => decisionClass(t.decision) === "critical").length;
-  const lowConf = traces.filter((t) => t.confidence !== null && t.confidence !== undefined && t.confidence < LOW_CONFIDENCE_THRESHOLD).length;
-  summaryEl.textContent = `${traces.length} claims · ${flagged} flagged for review · ${lowConf} low-confidence`;
+  if (traces.length === 0) {
+    listEl.appendChild(el("div", { class: "empty-state" }, "No claims match this filter."));
+    return;
+  }
 
   traces.forEach((trace) => {
     const cls = decisionClass(trace.decision);
@@ -75,14 +122,15 @@ function renderList(traces, onSelect) {
     const lossType = extracted.loss_type ? extracted.loss_type.replaceAll("_", " ") : "unclassified";
 
     const badges = [el("span", { class: `badge badge-${cls}` }, decisionLabel(trace.decision))];
-    if (trace.confidence !== null && trace.confidence !== undefined && trace.confidence < LOW_CONFIDENCE_THRESHOLD) {
+    if (isLowConfidence(trace)) {
       badges.push(el("span", { class: "badge badge-low-confidence" }, "⚠ low confidence"));
     }
 
+    const selected = trace.claim_id === selectedClaimId;
     const row = el(
       "div",
       {
-        class: `claim-row decision-${cls}`,
+        class: `claim-row decision-${cls}${selected ? " selected" : ""}`,
         "data-claim-id": trace.claim_id,
         tabindex: "0",
         role: "button",
@@ -96,11 +144,11 @@ function renderList(traces, onSelect) {
       ),
       el("div", {}, ...badges)
     );
-    row.addEventListener("click", () => onSelect(trace, row));
+    row.addEventListener("click", () => onSelect(trace));
     row.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        onSelect(trace, row);
+        onSelect(trace);
       }
     });
     listEl.appendChild(row);
@@ -272,32 +320,43 @@ function renderDetail(trace) {
 
 async function main() {
   const traces = await loadTraces();
+  const filtersEl = document.getElementById("list-filters");
   const listEl = document.getElementById("claim-list");
 
   if (traces.length === 0) {
-    document.getElementById("list-summary").textContent = "No claims found.";
+    filtersEl.innerHTML = "";
     listEl.innerHTML =
       '<div class="empty-state">No trace data yet. Run <code>python -m agent.run_batch</code> (needs ANTHROPIC_API_KEY), then reload.</div>';
     return;
   }
 
-  let selectedRow = null;
-  renderList(traces, (trace, row) => {
-    if (selectedRow) selectedRow.classList.remove("selected");
-    row.classList.add("selected");
-    selectedRow = row;
-    renderDetail(trace);
-    // On phone-width screens list and detail are separate sliding panes -
-    // this is a no-op at desktop widths, where both are always visible.
-    document.body.classList.add("showing-detail");
-  });
+  const state = { decision: "all", lowConfidenceOnly: false, selectedClaimId: null };
+
+  function render() {
+    renderFilters(traces, state, (patch) => {
+      Object.assign(state, patch);
+      render();
+    });
+    renderList(
+      applyFilters(traces, state),
+      (trace) => {
+        state.selectedClaimId = trace.claim_id;
+        renderDetail(trace);
+        document.body.classList.add("showing-detail");
+        render();
+      },
+      state.selectedClaimId
+    );
+  }
 
   // Auto-select the first flagged claim if there is one, else the first claim,
   // so a reviewer's eye lands somewhere useful immediately.
   const firstFlagged = traces.find((t) => decisionClass(t.decision) === "critical");
   const initial = firstFlagged || traces[0];
-  const initialRow = listEl.querySelector(`[data-claim-id="${CSS.escape(initial.claim_id)}"]`);
-  if (initialRow) initialRow.click();
+  state.selectedClaimId = initial.claim_id;
+  renderDetail(initial);
+  document.body.classList.add("showing-detail");
+  render();
 }
 
 main();

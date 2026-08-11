@@ -1,42 +1,46 @@
 :root {
   color-scheme: light;
-  --surface-1: #fcfcfb;
-  --surface-2: #f9f9f7;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-  --gridline: #e1e0d9;
-  --border: rgba(11, 11, 11, 0.1);
-  --row-hover: #f0efec;
-  --row-selected: #e6f0fb;
-  --accent: #2a78d6;
+  --surface-1: #ffffff;
+  --surface-2: #f1f2f6;
+  --text-primary: #161f2c;
+  --text-secondary: #4a5568;
+  --text-muted: #8891a0;
+  --gridline: #e1e4ea;
+  --border: rgba(22, 31, 44, 0.12);
+  --row-hover: #eceef3;
+  --row-selected: #e7ecfa;
+  --accent: #35509c;
 
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-serious: #ec835a;
-  --status-critical: #d03b3b;
+  --status-good: #1c8a5a;
+  --status-warning: #b8860a;
+  --status-serious: #c2660f;
+  --status-critical: #c53434;
 
-  --shadow-sm: 0 1px 2px rgba(11, 11, 11, 0.05), 0 1px 1px rgba(11, 11, 11, 0.04);
+  --shadow-sm: 0 1px 2px rgba(22, 31, 44, 0.06), 0 1px 1px rgba(22, 31, 44, 0.04);
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --surface-1: #1a1a19;
-    --surface-2: #0d0d0d;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --gridline: #2c2c2a;
-    --border: rgba(255, 255, 255, 0.1);
-    --row-hover: #232322;
-    --row-selected: #17324f;
-    --accent: #3987e5;
+    --surface-1: #141b28;
+    --surface-2: #0c111a;
+    --text-primary: #eef1f6;
+    --text-secondary: #b6bfcc;
+    --text-muted: #7c8494;
+    --gridline: #232c3d;
+    --border: rgba(238, 241, 246, 0.12);
+    --row-hover: #1a2334;
+    --row-selected: #1c2748;
+    --accent: #7fa0ef;
 
-    --status-good: #0ca30c;
-    --status-warning: #fab219;
-    --status-serious: #ec835a;
-    --status-critical: #e66767;
+    --status-good: #34b579;
+    --status-warning: #d7a72a;
+    --status-serious: #e08a49;
+    --status-critical: #e2645f;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
   }
@@ -44,21 +48,21 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface-1: #1a1a19;
-  --surface-2: #0d0d0d;
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #898781;
-  --gridline: #2c2c2a;
-  --border: rgba(255, 255, 255, 0.1);
-  --row-hover: #232322;
-  --row-selected: #17324f;
-  --accent: #3987e5;
+  --surface-1: #141b28;
+  --surface-2: #0c111a;
+  --text-primary: #eef1f6;
+  --text-secondary: #b6bfcc;
+  --text-muted: #7c8494;
+  --gridline: #232c3d;
+  --border: rgba(238, 241, 246, 0.12);
+  --row-hover: #1a2334;
+  --row-selected: #1c2748;
+  --accent: #7fa0ef;
 
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-serious: #ec835a;
-  --status-critical: #e66767;
+  --status-good: #34b579;
+  --status-warning: #d7a72a;
+  --status-serious: #e08a49;
+  --status-critical: #e2645f;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
 }
@@ -76,33 +80,62 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   background: var(--surface-2);
   color: var(--text-primary);
 }
 
 header {
-  padding: 16px 24px;
+  padding: 14px 24px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mark {
+  flex-shrink: 0;
+}
+
+.mark-in {
+  stroke: var(--accent);
+}
+.mark-prism {
+  fill: var(--surface-2);
+  stroke: var(--text-primary);
+}
+.mark-good {
+  stroke: var(--status-good);
+}
+.mark-warn {
+  stroke: var(--status-warning);
+}
+.mark-crit {
+  stroke: var(--status-critical);
+}
+
 header h1 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-size: 21px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 header p {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   font-size: 13px;
   color: var(--text-secondary);
 }
 
 .layout {
   display: flex;
-  height: calc(100vh - 65px);
-  height: calc(100dvh - 65px);
+  height: calc(100vh - 63px);
+  height: calc(100dvh - 63px);
 }
 
 .list-pane {
@@ -118,11 +151,66 @@ header p {
   display: none;
 }
 
-.list-summary {
-  padding: 10px 16px;
-  font-size: 12px;
-  color: var(--text-muted);
+.list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--gridline);
+}
+
+.filter-tile {
+  --tile-color: var(--text-secondary);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-tile:hover {
+  background: var(--row-hover);
+}
+
+.filter-tile[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--tile-color) 14%, var(--surface-1));
+  border-color: var(--tile-color);
+}
+
+.filter-tile--all {
+  --tile-color: var(--accent);
+}
+.filter-tile--good {
+  --tile-color: var(--status-good);
+}
+.filter-tile--warning {
+  --tile-color: var(--status-warning);
+}
+.filter-tile--critical {
+  --tile-color: var(--status-critical);
+}
+.filter-tile--lowconf {
+  --tile-color: var(--status-serious);
+}
+
+.filter-count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--tile-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
 }
 
 .claim-row {
@@ -145,6 +233,7 @@ header p {
 
 .claim-row:focus-visible,
 .back-btn:focus-visible,
+.filter-tile:focus-visible,
 .tool-call summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
@@ -166,6 +255,7 @@ header p {
 }
 
 .claim-row-id {
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
 }
@@ -226,6 +316,7 @@ header p {
 }
 
 .confidence-label {
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
@@ -237,7 +328,7 @@ header p {
 }
 .badge-warning {
   background: color-mix(in srgb, var(--status-warning) 22%, transparent);
-  color: #8a5c00;
+  color: #7a5200;
 }
 :root[data-theme="dark"] .badge-warning {
   color: var(--status-warning);
@@ -269,11 +360,16 @@ header p {
   }
 
   header h1 {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   header p {
     font-size: 12px;
+  }
+
+  .mark {
+    width: 24px;
+    height: 19px;
   }
 
   .layout {
@@ -353,7 +449,10 @@ header p {
 
 .detail-header h2 {
   margin: 0 0 4px;
-  font-size: 20px;
+  font-family: var(--font-mono);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .detail-header .edge-case {
@@ -381,8 +480,9 @@ section.block h3 {
 
 .submitted-text {
   white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--text-secondary);
 }
 
@@ -404,6 +504,7 @@ section.block h3 {
 }
 
 .field-value {
+  font-family: var(--font-mono);
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
@@ -424,14 +525,15 @@ section.block h3 {
 
 .evidence-item .source,
 .flag-item .code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--accent);
 }
 
 .reasoning {
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .tool-call {
@@ -444,7 +546,7 @@ section.block h3 {
 .tool-call summary {
   padding: 8px 12px;
   font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   cursor: pointer;
   color: var(--text-secondary);
 }
@@ -453,6 +555,7 @@ section.block h3 {
   margin: 0;
   padding: 10px 12px;
   background: var(--surface-2);
+  font-family: var(--font-mono);
   font-size: 11px;
   overflow-x: auto;
   border-top: 1px solid var(--gridline);

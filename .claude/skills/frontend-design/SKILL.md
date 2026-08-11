@@ -57,11 +57,50 @@ from a token (`--surface-2`), never left transparent.
 
 ## Typography
 
-`system-ui, -apple-system, "Segoe UI", sans-serif` - no webfonts, no
-`@font-face`. Scale in use: `18px`/600 weight for the page h1, `20px` for
-detail headers, `13-14px` for body/field text, `11-12px` for muted labels and
-captions (often with `text-transform: uppercase` + `letter-spacing: 0.03-0.04em`
-for section labels, matching `section.block h3`).
+Three-role type system, all IBM Plex (loaded via Google Fonts in
+`index.html`'s `<head>` - this project is a real deployed site, not a
+CSP-locked artifact, so webfonts are fine here). Each role is a token, not a
+hardcoded family name:
+
+- `--font-sans` (IBM Plex Sans): UI chrome - headers, labels, buttons,
+  badges, filter tiles, section titles.
+- `--font-serif` (IBM Plex Serif): the actual content being reviewed - the
+  claim narrative (`.submitted-text`) and the agent's reasoning
+  (`.reasoning`). This is a deliberate split: sans is "the system," serif is
+  "the document." Keep new prose/narrative content in serif, not sans.
+- `--font-mono` (IBM Plex Mono): identifiers and data - claim IDs, every
+  `.field-value` (policy numbers, dates, money - rendered mono uniformly for
+  a ledger/case-file feel), evidence source paths, tool-call JSON.
+
+Don't introduce a fourth family or fall back to generic `system-ui` for new
+UI text - reuse one of the three roles above.
+
+Scale in use: `21px`/600 weight for the page h1 and detail headers (h1 uses
+sans, detail `<h2>` claim-id headers use mono), `15px`/1.6-1.65 line-height
+for serif body text, `13-14px` sans/mono for field text, `11-12px` sans for
+muted labels and captions (`text-transform: uppercase` +
+`letter-spacing: 0.03-0.04em`, matching `section.block h3`).
+
+## The brand mark
+
+`.brand` in the header pairs a small inline SVG (`.mark`) with the "Prism"
+wordmark. The mark is a literal visual pun on the product name: one line in
+`--accent` enters a triangle, three lines exit colored
+`--status-good`/`--status-warning`/`--status-critical` - light splitting into
+the same outcome colors used everywhere else in the UI. It's the one
+deliberately "designed" flourish in an otherwise restrained, utilitarian
+tool - don't add a second one; keep everything else quiet by comparison.
+
+## Filter tiles (`.list-filters` / `.filter-tile`)
+
+The claim-count summary and the decision filter are the same component, not
+two - each `.filter-tile` shows a live count (`.filter-count`, mono,
+`tabular-nums`) and toggles `aria-pressed`. `DECISION_FILTERS` in app.js is
+the source of truth for which decisions get a tile; a `--tile-color` custom
+property per `.filter-tile--*` modifier drives both the pressed-state
+background (`color-mix`) and the count color. If you add a new filterable
+dimension, follow this pattern rather than adding a separate, silent count
+display.
 
 ## JS conventions (app.js)
 
