@@ -11,3 +11,9 @@ atlas
 benchmark
 requirements.txt
 README.md
+
+# server.py is the local-dev FastAPI server (live agent calls, /api/claims).
+# It must not ship to Vercel: this is a static-only deploy of dashboard/'s
+# HTML/CSS/JS/data.js, with no backend and no API key exposed publicly. Its
+# presence is what triggers Vercel's "FastAPI entrypoint found" auto-detect.
+dashboard/server.py
