@@ -27,6 +27,21 @@ block for exact values before using them):
 Every new color decision must be a token, not a one-off value, and must have
 a reason to pick a *new* token vs. reusing an existing one.
 
+`--surface-1` is deliberately translucent (`rgba(...)`, not a flat hex) in
+both themes - it's the "glass" layer: matte, near-neutral black/grey
+(`--surface-2`) underneath, with blue pulled out specifically into
+translucent panels, borders, and washes rather than tinting the neutrals
+themselves. Concretely: dark `--surface-2` is matte near-black with almost no
+hue bias (not navy); `--surface-1`, `--border`, `--row-hover`,
+`--row-selected`, and `--shadow-sm`'s ambient glow all carry the blue tint
+instead, at low opacity (`rgba(110-150, 150-170, 200-255, 0.06-0.55)` range).
+Any element using `--surface-1` should also get
+`backdrop-filter: blur(var(--glass-blur))` (+ `-webkit-` prefix) so it reads
+as glass, not just a flat translucent color - see `header`, `.list-pane`,
+`section.block`, `.back-btn`. Keep this split (neutral matte ground, blue
+glass panels) rather than reintroducing a blue-tinted neutral - that was
+tried and explicitly rejected in favor of this.
+
 ## Theming - three states, not two
 
 The page can render with no explicit theme stamp (system default, split only

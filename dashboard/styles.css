@@ -1,22 +1,23 @@
 :root {
   color-scheme: light;
-  --surface-1: #ffffff;
-  --surface-2: #f1f2f6;
-  --text-primary: #161f2c;
-  --text-secondary: #4a5568;
-  --text-muted: #8891a0;
-  --gridline: #e1e4ea;
-  --border: rgba(22, 31, 44, 0.12);
-  --row-hover: #eceef3;
-  --row-selected: #e7ecfa;
-  --accent: #35509c;
+  --surface-1: rgba(255, 255, 255, 0.72);
+  --surface-2: #eef0f4;
+  --text-primary: #12161d;
+  --text-secondary: #48505c;
+  --text-muted: #838c99;
+  --gridline: #dde1e8;
+  --border: rgba(40, 60, 100, 0.14);
+  --row-hover: rgba(60, 90, 160, 0.06);
+  --row-selected: rgba(52, 104, 216, 0.1);
+  --accent: #3468d8;
 
-  --status-good: #1c8a5a;
-  --status-warning: #b8860a;
-  --status-serious: #c2660f;
-  --status-critical: #c53434;
+  --status-good: #178a56;
+  --status-warning: #9c6d05;
+  --status-serious: #b85c0d;
+  --status-critical: #c13636;
 
-  --shadow-sm: 0 1px 2px rgba(22, 31, 44, 0.06), 0 1px 1px rgba(22, 31, 44, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 30, 50, 0.06), 0 10px 24px rgba(20, 60, 120, 0.08);
+  --glass-blur: 16px;
 
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
@@ -26,45 +27,47 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --surface-1: #141b28;
-    --surface-2: #0c111a;
-    --text-primary: #eef1f6;
-    --text-secondary: #b6bfcc;
-    --text-muted: #7c8494;
-    --gridline: #232c3d;
-    --border: rgba(238, 241, 246, 0.12);
-    --row-hover: #1a2334;
-    --row-selected: #1c2748;
-    --accent: #7fa0ef;
+    --surface-1: rgba(42, 46, 56, 0.55);
+    --surface-2: #0a0b0c;
+    --text-primary: #f1f2f4;
+    --text-secondary: #a9adb6;
+    --text-muted: #74777f;
+    --gridline: #232428;
+    --border: rgba(130, 155, 210, 0.18);
+    --row-hover: rgba(130, 155, 210, 0.07);
+    --row-selected: rgba(110, 168, 254, 0.16);
+    --accent: #6ea8fe;
 
-    --status-good: #34b579;
-    --status-warning: #d7a72a;
-    --status-serious: #e08a49;
-    --status-critical: #e2645f;
+    --status-good: #38d494;
+    --status-warning: #e6b93f;
+    --status-serious: #f0954a;
+    --status-critical: #f2665e;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6), 0 10px 28px rgba(30, 60, 130, 0.28);
+    --glass-blur: 16px;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface-1: #141b28;
-  --surface-2: #0c111a;
-  --text-primary: #eef1f6;
-  --text-secondary: #b6bfcc;
-  --text-muted: #7c8494;
-  --gridline: #232c3d;
-  --border: rgba(238, 241, 246, 0.12);
-  --row-hover: #1a2334;
-  --row-selected: #1c2748;
-  --accent: #7fa0ef;
+  --surface-1: rgba(42, 46, 56, 0.55);
+  --surface-2: #0a0b0c;
+  --text-primary: #f1f2f4;
+  --text-secondary: #a9adb6;
+  --text-muted: #74777f;
+  --gridline: #232428;
+  --border: rgba(130, 155, 210, 0.18);
+  --row-hover: rgba(130, 155, 210, 0.07);
+  --row-selected: rgba(110, 168, 254, 0.16);
+  --accent: #6ea8fe;
 
-  --status-good: #34b579;
-  --status-warning: #d7a72a;
-  --status-serious: #e08a49;
-  --status-critical: #e2645f;
+  --status-good: #38d494;
+  --status-warning: #e6b93f;
+  --status-serious: #f0954a;
+  --status-critical: #f2665e;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6), 0 10px 28px rgba(30, 60, 130, 0.28);
+  --glass-blur: 16px;
 }
 
 * {
@@ -89,6 +92,8 @@ header {
   padding: 14px 24px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .brand {
@@ -145,6 +150,8 @@ header p {
   -webkit-overflow-scrolling: touch;
   border-right: 1px solid var(--border);
   background: var(--surface-1);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .back-btn {
@@ -417,6 +424,8 @@ header p {
     background: var(--surface-1);
     color: var(--text-primary);
     cursor: pointer;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
   }
 
   .claim-row {
@@ -468,6 +477,8 @@ section.block {
   padding: 16px 20px;
   margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 section.block h3 {
