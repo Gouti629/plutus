@@ -165,7 +165,57 @@ function fieldBlock(label, value) {
   );
 }
 
-function renderDetail(trace) {
+function renderFollowUp(trace, onReprocessed) {
+  const textarea = el("textarea", { class: "followup-textarea", rows: "4" });
+  textarea.value = trace.submitted_text;
+
+  const status = el("div", { class: "followup-status" });
+  const btn = el("button", { class: "followup-btn", type: "button" }, "Re-run extraction & decision");
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "Re-running…";
+    status.className = "followup-status";
+    status.textContent = "";
+    try {
+      const res = await fetch("/api/claims/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claim_id: trace.claim_id, submitted_text: textarea.value }),
+      });
+      if (!res.ok) throw new Error(`server returned ${res.status}`);
+      const updated = await res.json();
+      updated.edge_case = trace.edge_case;
+      status.textContent = `Updated: ${decisionLabel(updated.decision)}${
+        updated.confidence !== null && updated.confidence !== undefined ? ` (confidence ${updated.confidence.toFixed(2)})` : ""
+      }`;
+      status.classList.add("ok");
+      if (onReprocessed) onReprocessed(updated);
+    } catch (e) {
+      status.textContent =
+        "Couldn't reach the live agent. This only works when served via `dashboard/server.py` with ANTHROPIC_API_KEY set - not on a static hosted snapshot.";
+      status.classList.add("err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Re-run extraction & decision";
+    }
+  });
+
+  return el(
+    "section",
+    { class: "block followup" },
+    el("h3", {}, "Missing policy number"),
+    el(
+      "p",
+      { class: "followup-hint" },
+      "The agent couldn't extract a policy number from this narrative, so it can't be matched to a policy. Add it below (or edit the narrative directly) and re-run."
+    ),
+    textarea,
+    el("div", { class: "followup-actions" }, btn, status)
+  );
+}
+
+function renderDetail(trace, { onReprocessed } = {}) {
   const pane = document.getElementById("detail-pane");
   pane.innerHTML = "";
 
@@ -234,6 +284,10 @@ function renderDetail(trace) {
       )
     )
   );
+
+  if (!extracted.policy_number) {
+    pane.appendChild(renderFollowUp(trace, onReprocessed));
+  }
 
   if (trace.reasoning_summary) {
     pane.appendChild(
@@ -332,31 +386,31 @@ async function main() {
 
   const state = { decision: "all", lowConfidenceOnly: false, selectedClaimId: null };
 
+  function selectClaim(trace) {
+    state.selectedClaimId = trace.claim_id;
+    renderDetail(trace, { onReprocessed: handleReprocessed });
+    document.body.classList.add("showing-detail");
+    render();
+  }
+
+  function handleReprocessed(updated) {
+    const idx = traces.findIndex((t) => t.claim_id === updated.claim_id);
+    if (idx !== -1) traces[idx] = updated;
+    renderDetail(updated, { onReprocessed: handleReprocessed });
+    render();
+  }
+
   function render() {
     renderFilters(traces, state, (patch) => {
       Object.assign(state, patch);
       render();
     });
-    renderList(
-      applyFilters(traces, state),
-      (trace) => {
-        state.selectedClaimId = trace.claim_id;
-        renderDetail(trace);
-        document.body.classList.add("showing-detail");
-        render();
-      },
-      state.selectedClaimId
-    );
+    renderList(applyFilters(traces, state), selectClaim, state.selectedClaimId);
   }
 
-  // Auto-select the first flagged claim if there is one, else the first claim,
-  // so a reviewer's eye lands somewhere useful immediately.
-  const firstFlagged = traces.find((t) => decisionClass(t.decision) === "critical");
-  const initial = firstFlagged || traces[0];
-  state.selectedClaimId = initial.claim_id;
-  renderDetail(initial);
-  document.body.classList.add("showing-detail");
-  render();
+  // Land on the first claim in the list (claim-001), not an auto-picked
+  // "most interesting" one - predictable beats clever here.
+  selectClaim(traces[0]);
 }
 
 main();

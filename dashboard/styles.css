@@ -491,6 +491,83 @@ section.block h3 {
   color: var(--text-muted);
 }
 
+section.block.followup {
+  border-left: 3px solid var(--accent);
+}
+
+.followup-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.followup-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.followup-textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.followup-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.followup-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.followup-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.followup-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.followup-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.followup-status {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.followup-status.ok {
+  color: var(--status-good);
+}
+
+.followup-status.err {
+  color: var(--status-critical);
+}
+
 .submitted-text {
   white-space: pre-wrap;
   font-family: var(--font-serif);
