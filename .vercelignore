@@ -1,0 +1,13 @@
+# Vercel only needs to serve dashboard/ as a static site (see vercel.json's
+# outputDirectory). Everything below is the Python side of the project and
+# would otherwise get uploaded pointlessly on every deploy.
+.venv
+__pycache__
+*.pyc
+.env
+.env.example
+agent
+atlas
+benchmark
+requirements.txt
+README.md

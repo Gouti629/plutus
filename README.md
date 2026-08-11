@@ -132,7 +132,26 @@ directly as a file (`dashboard/index.html`) once `data.js` exists, no server
 required — `server.py` additionally exposes `POST /api/claims/process` to
 run a brand-new narrative through the live agent from the browser.
 
-### 5. Run the benchmark
+### 5. Deploy the dashboard (optional)
+
+`vercel.json` at the repo root points Vercel at `dashboard/` as a static
+site — no build step, no backend, no API key needed to view it. It serves
+whatever's in `dashboard/data.js` at deploy time, so regenerate that (`python
+-m agent.run_batch`) and commit it before deploying to refresh what's shown.
+`/api/claims/process` (the live "run a new narrative through the agent"
+endpoint) only exists in `dashboard/server.py` and isn't part of this static
+deploy - the hosted version is read-only, on purpose.
+
+```bash
+npm i -g vercel   # one-time
+vercel            # first run links/creates the Vercel project, then deploys
+vercel --prod     # subsequent production deploys
+```
+
+Or connect the GitHub repo at vercel.com/new and let it auto-deploy on push -
+no CLI needed either way, since `vercel.json` already tells it where to look.
+
+### 6. Run the benchmark
 
 ```bash
 python -m benchmark.api_bench          # real, needs ANTHROPIC_API_KEY

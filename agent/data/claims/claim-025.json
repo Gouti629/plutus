@@ -1,5 +1,5 @@
 {
   "claim_id": "claim-025",
-  "edge_case": "ambiguous cause on homeowners, no clear loss_type -> expect request more info",
-  "submitted_text": "Robert Chen, POL-11502. Something happened to the side of the house over the weekend - there's a big gouge in the siding and some of the gutter is bent up. Not sure if it was the wind, a branch, or someone's car backing into it. Haven't had a chance to look closely yet."
+  "edge_case": "auto damage above coverage limit -> expect flag",
+  "submitted_text": "Angela Brooks, POL-11367. Multi-car pileup on the highway on 2026-07-13 in heavy fog, I was one of about six cars involved. My car is likely a total loss - shop is estimating $27,000 to repair versus the car's value, and my policy is on the lower coverage tier so I'm not sure what will actually be paid out."
 }

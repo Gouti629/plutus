@@ -201,17 +201,25 @@ CLAIMS = [
         ),
     },
     {
-        "claim_id": "claim-021",
-        "edge_case": "gradual water leak, explicitly stated as long-term -> matches gradual-water exclusion",
-        "submitted_text": (
-            "James Whitfield again, POL-10891. We finally found out why the bathroom floor has "
-            "been soft - there's been a slow leak under the shower pan for what the plumber "
-            "thinks is at least a year. Subfloor and some framing are rotted. Repair estimate is "
-            "$9,800."
-        ),
-    },
+            "claim_id": "claim-021",
+            "edge_case": "gradual water leak, explicitly stated as long-term -> matches gradual-water exclusion",
+            "submitted_text": (
+                "James Whitfield again, POL-10891. We finally found out why the bathroom floor has "
+                "been soft - there's been a slow leak under the shower pan for what the plumber "
+                "thinks is at least a year. Subfloor and some framing are rotted. Repair estimate is "
+                "$9,800."
+            ),
+        },
     {
-        "claim_id": "claim-022",
+            "claim_id": "claim-022",
+            "edge_case": "Auto damage",
+            "submitted_text": (
+                "My name is Goutham Srirangam, POL-28456. I was parking in front of my house when some one came from behind and hit my car."
+                "The whole trunk got damaged and the the estimated cost is 5000 dollars. It happened on July 20th, 2026"
+            ),
+        },
+    {
+        "claim_id": "claim-023",
         "edge_case": "clean vandalism claim under comprehensive -> expect auto-approve",
         "submitted_text": (
             "Sofia Marchetti, POL-11689. Woke up on 2026-07-21 to find both mirrors snapped off "
@@ -220,7 +228,7 @@ CLAIMS = [
         ),
     },
     {
-        "claim_id": "claim-023",
+        "claim_id": "claim-024",
         "edge_case": "policy number typo / not found -> expect flag",
         "submitted_text": (
             "This is Maria Alvarez, my policy number is POL-10239 I think - could be off by a "
@@ -229,7 +237,7 @@ CLAIMS = [
         ),
     },
     {
-        "claim_id": "claim-024",
+        "claim_id": "claim-025",
         "edge_case": "auto damage above coverage limit -> expect flag",
         "submitted_text": (
             "Angela Brooks, POL-11367. Multi-car pileup on the highway on 2026-07-13 in heavy "
@@ -239,7 +247,7 @@ CLAIMS = [
         ),
     },
     {
-        "claim_id": "claim-025",
+        "claim_id": "claim-026",
         "edge_case": "ambiguous cause on homeowners, no clear loss_type -> expect request more info",
         "submitted_text": (
             "Robert Chen, POL-11502. Something happened to the side of the house over the "
@@ -249,7 +257,7 @@ CLAIMS = [
         ),
     },
     {
-        "claim_id": "claim-026",
+        "claim_id": "claim-027",
         "edge_case": "multiple minor risk indicators combined (no time of loss + high estimate) -> expect flag",
         "submitted_text": (
             "David Kim, POL-11220. At some point over the last few days someone got into the "

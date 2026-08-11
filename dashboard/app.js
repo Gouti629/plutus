@@ -94,6 +94,12 @@ function renderDetail(trace) {
   const pane = document.getElementById("detail-pane");
   pane.innerHTML = "";
 
+  const backBtn = el("button", { class: "back-btn", type: "button" }, "← Back to claims");
+  backBtn.addEventListener("click", () => {
+    document.body.classList.remove("showing-detail");
+  });
+  pane.appendChild(backBtn);
+
   const extracted = trace.extracted || {};
   const cls = decisionClass(trace.decision);
 
@@ -256,6 +262,9 @@ async function main() {
     row.classList.add("selected");
     selectedRow = row;
     renderDetail(trace);
+    // On phone-width screens list and detail are separate sliding panes -
+    // this is a no-op at desktop widths, where both are always visible.
+    document.body.classList.add("showing-detail");
   });
 
   // Auto-select the first flagged claim if there is one, else the first claim,

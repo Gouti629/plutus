@@ -5,5 +5,10 @@ __pycache__/
 agent/data/traces/*.json
 !agent/data/traces/.gitkeep
 benchmark/results/*.json
-dashboard/data.js
 node_modules/
+
+# dashboard/data.js is intentionally tracked (not ignored): Vercel serves the
+# dashboard as a static site with no build step and no backend, so the last
+# generated trace bundle has to be committed for the deployed site to show
+# anything. Regenerate it locally with `python -m agent.run_batch` and commit
+# the update whenever you want the hosted snapshot refreshed.

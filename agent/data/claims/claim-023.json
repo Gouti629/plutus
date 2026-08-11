@@ -1,5 +1,5 @@
 {
   "claim_id": "claim-023",
-  "edge_case": "policy number typo / not found -> expect flag",
-  "submitted_text": "This is Maria Alvarez, my policy number is POL-10239 I think - could be off by a digit. On 2026-07-17 I hit a pothole hard on the interstate and blew out both passenger-side tires and bent a rim. About $1,100 total."
+  "edge_case": "clean vandalism claim under comprehensive -> expect auto-approve",
+  "submitted_text": "Sofia Marchetti, POL-11689. Woke up on 2026-07-21 to find both mirrors snapped off and a long key-scratch down the side of my car in the apartment parking lot. No idea who did it. Estimate to repair is $2,900."
 }

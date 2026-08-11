@@ -1,5 +1,5 @@
 {
   "claim_id": "claim-026",
-  "edge_case": "multiple minor risk indicators combined (no time of loss + high estimate) -> expect flag",
-  "submitted_text": "David Kim, POL-11220. At some point over the last few days someone got into the detached shed and took a ride-on mower, a generator, and various tools. We're not sure exactly when since we don't check the shed daily. Total value of everything taken is around $16,000."
+  "edge_case": "ambiguous cause on homeowners, no clear loss_type -> expect request more info",
+  "submitted_text": "Robert Chen, POL-11502. Something happened to the side of the house over the weekend - there's a big gouge in the siding and some of the gutter is bent up. Not sure if it was the wind, a branch, or someone's car backing into it. Haven't had a chance to look closely yet."
 }
