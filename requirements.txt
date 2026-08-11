@@ -5,6 +5,7 @@ fastapi>=0.111
 uvicorn>=0.30
 python-dotenv>=1.0
 httpx>=0.27
+python-multipart>=0.0.9
 
 # Only needed to run benchmark/vllm_bench.py against a self-hosted vLLM
 # server - not required for the agent, Atlas, dashboard, or api_bench.py.

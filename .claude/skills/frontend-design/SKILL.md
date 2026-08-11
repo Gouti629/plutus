@@ -173,6 +173,32 @@ you add more "reviewer supplies a missing fact" follow-ups later, keep this
 shape: resolve the fact through a real source, resume from Atlas onward,
 never regenerate narrative text on the reviewer's behalf.
 
+## New-claim intake modal + attachments
+
+The "+ New claim" button (header) opens `#new-claim-overlay`, static markup
+in `index.html` (not built via `el()` - this is structural chrome like the
+list-pane/detail-pane shell, toggled with the `hidden` attribute, not a
+dynamically-constructed component). It's a **demo intake path**, explicitly
+labeled as such in `.modal-hint` - in the real architecture the customer
+submits through their own portal, not through Prism, which is employee-only.
+Don't let this drift into looking like an employee-facing action on an
+*existing* claim; it only creates new ones.
+
+Submission goes through `FormData` + `fetch(..., { method: "POST", body:
+formData })` to `/api/claims/process` - **not** `JSON.stringify` +
+`Content-Type: application/json` like every other POST in this file. Do not
+add a `Content-Type` header manually when sending `FormData`; the browser
+sets the multipart boundary itself, and overriding it breaks the upload
+silently.
+
+`renderAttachments()` shows the resulting `trace.attachments` (photo
+thumbnails / PDF links, served from `/api/claims/{id}/attachments/{filename}`)
+paired with `trace.attachment_reviews` by filename - a colored dot
+(`.attachment-review.supports` / `.contradicts`) reusing the existing
+good/critical status tokens, not a new color. Photos render as real `<img>`
+thumbnails (`object-fit: cover`), not icons - the point is a reviewer can see
+the evidence without leaving the trace.
+
 ## JS conventions (app.js)
 
 Plain DOM manipulation through the `el(tag, attrs, ...children)` helper

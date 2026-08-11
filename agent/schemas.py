@@ -47,6 +47,30 @@ class ExtractedFields(BaseModel):
     estimated_damage_usd: Optional[float] = None
 
 
+class Attachment(BaseModel):
+    """A file uploaded alongside a submission - an invoice/bill PDF or a
+    damage photo. `path` is relative to the project root
+    (agent/data/attachments/{claim_id}/{filename})."""
+
+    filename: str
+    kind: Literal["invoice", "damage_photo"]
+    content_type: str
+    path: str
+    size_bytes: int
+
+
+class AttachmentReview(BaseModel):
+    """What the agent observed when it looked at one attachment - the
+    multimodal counterpart to EvidenceCitation. `supports_claim` is null
+    when the attachment is present but genuinely inconclusive, not when the
+    agent skipped reviewing it."""
+
+    filename: str
+    kind: Literal["invoice", "damage_photo"]
+    observation: str
+    supports_claim: Optional[bool] = None
+
+
 class EvidenceCitation(BaseModel):
     source: str = Field(..., description="Path into the Atlas record this cites, e.g. policy:POL-1004.exclusions[1]")
     rule_id: Optional[str] = None
@@ -76,6 +100,8 @@ class DecisionTrace(BaseModel):
     reasoning_summary: Optional[str] = None
     evidence: list[EvidenceCitation] = Field(default_factory=list)
     flags: list[Flag] = Field(default_factory=list)
+    attachments: list[Attachment] = Field(default_factory=list)
+    attachment_reviews: list[AttachmentReview] = Field(default_factory=list)
     tool_calls: list[ToolCallRecord] = Field(default_factory=list)
     model: Optional[str] = None
     error: Optional[str] = None

@@ -27,6 +27,7 @@
         <p>Every claim the Navigator agent has processed, with its full reasoning trail and cited policy evidence.</p>
       </div>
     </div>
+    <button class="new-claim-btn" id="new-claim-btn" type="button">+ New claim</button>
   </header>
   <div class="layout">
     <div class="list-pane">
@@ -35,6 +36,48 @@
     </div>
     <div class="detail-pane" id="detail-pane">
       <div class="empty-state">Select a claim to see its full trace.</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="new-claim-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-claim-title">
+      <div class="modal-header">
+        <h2 id="new-claim-title">New claim submission</h2>
+        <button class="modal-close" id="new-claim-close" type="button" aria-label="Close">&times;</button>
+      </div>
+      <p class="modal-hint">
+        Demo intake path - in production this is what the customer-facing portal submits, not something an
+        employee fills in on someone's behalf. Runs the live agent, so it needs the server running with
+        <code>ANTHROPIC_API_KEY</code> set.
+      </p>
+      <form id="new-claim-form">
+        <label class="form-field">
+          <span class="form-label">Claim ID</span>
+          <input type="text" name="claim_id" id="new-claim-id" required />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Narrative</span>
+          <textarea
+            name="submitted_text"
+            id="new-claim-text"
+            rows="5"
+            required
+            placeholder="Policyholder name, policy number, what happened, when, estimated damage..."
+          ></textarea>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Invoices / bills (PDF)</span>
+          <input type="file" name="invoices" id="new-claim-invoices" accept="application/pdf" multiple />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Damage photos (JPG/PNG)</span>
+          <input type="file" name="damage_photos" id="new-claim-photos" accept="image/jpeg,image/png" multiple />
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="followup-btn" id="new-claim-submit">Submit claim</button>
+          <div class="followup-status" id="new-claim-status"></div>
+        </div>
+      </form>
     </div>
   </div>
 

@@ -4,6 +4,8 @@ __pycache__/
 .env
 agent/data/traces/*.json
 !agent/data/traces/.gitkeep
+agent/data/attachments/*
+!agent/data/attachments/.gitkeep
 benchmark/results/*.json
 node_modules/
 

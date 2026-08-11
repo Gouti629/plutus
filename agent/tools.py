@@ -1,8 +1,12 @@
 """Anthropic tool-use definitions for the FNOL Navigator agent.
 
-Five tools, two purposes:
-  - record_extracted_fields / submit_decision are "sinks": the agent calls
-    them to hand back typed data, and we just capture the input.
+Seven tools, three purposes:
+  - record_extracted_fields / record_attachment_review / submit_decision are
+    "sinks": the agent calls them to hand back typed data, and we just
+    capture the input. record_attachment_review is the multimodal
+    counterpart to record_extracted_fields - it's how the agent's read of an
+    invoice PDF or a damage photo becomes structured data instead of buried
+    prose in the reasoning summary.
   - lookup_policy / check_policy_status / check_coverage / check_exclusions
     are read-only queries into Atlas (atlas/rules.py) — the agent's only way
     to learn anything about a policy. There is no policy data in the system
@@ -103,6 +107,44 @@ CHECK_EXCLUSIONS = {
     },
 }
 
+RECORD_ATTACHMENT_REVIEW = {
+    "name": "record_attachment_review",
+    "description": (
+        "Record what you observed in each attached invoice/bill PDF or damage photo. Call this "
+        "once, after reviewing every attachment, before the Atlas lookups - but only if the "
+        "submission actually included attachments. Skip this tool entirely if none were provided."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "reviews": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "filename": {"type": "string", "description": "Must match the filename given for this attachment."},
+                        "kind": {"type": "string", "enum": ["invoice", "damage_photo"]},
+                        "observation": {
+                            "type": "string",
+                            "description": "1-2 sentence factual description of what the document/photo actually shows.",
+                        },
+                        "supports_claim": {
+                            "type": ["boolean", "null"],
+                            "description": (
+                                "true if this evidence is consistent with the narrative and the "
+                                "estimated damage; false if it contradicts or raises a concern; "
+                                "null only if genuinely inconclusive (e.g. an unreadable scan)."
+                            ),
+                        },
+                    },
+                    "required": ["filename", "kind", "observation", "supports_claim"],
+                },
+            },
+        },
+        "required": ["reviews"],
+    },
+}
+
 SUBMIT_DECISION = {
     "name": "submit_decision",
     "description": (
@@ -156,6 +198,7 @@ SUBMIT_DECISION = {
 
 ALL_TOOLS = [
     RECORD_EXTRACTED_FIELDS,
+    RECORD_ATTACHMENT_REVIEW,
     LOOKUP_POLICY,
     CHECK_POLICY_STATUS,
     CHECK_COVERAGE,

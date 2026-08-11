@@ -281,6 +281,52 @@ function renderFollowUp(trace, onReprocessed) {
   );
 }
 
+function renderAttachments(trace) {
+  const attachments = trace.attachments || [];
+  if (attachments.length === 0) return null;
+
+  const reviewsByFilename = {};
+  (trace.attachment_reviews || []).forEach((r) => {
+    reviewsByFilename[r.filename] = r;
+  });
+
+  const cards = attachments.map((att) => {
+    const review = reviewsByFilename[att.filename];
+    const url = `/api/claims/${encodeURIComponent(trace.claim_id)}/attachments/${encodeURIComponent(att.filename)}`;
+
+    const media =
+      att.kind === "damage_photo"
+        ? el(
+            "a",
+            { href: url, target: "_blank", rel: "noopener" },
+            el("img", { class: "attachment-thumb", src: url, alt: att.filename, loading: "lazy" })
+          )
+        : el("a", { class: "attachment-file", href: url, target: "_blank", rel: "noopener" }, "PDF");
+
+    const reviewCls =
+      review && review.supports_claim === true ? "supports" : review && review.supports_claim === false ? "contradicts" : "";
+
+    return el(
+      "div",
+      { class: "attachment-card" },
+      media,
+      el(
+        "div",
+        { class: "attachment-meta" },
+        el("div", { class: "attachment-name" }, att.filename),
+        review ? el("div", { class: `attachment-review ${reviewCls}` }, review.observation) : null
+      )
+    );
+  });
+
+  return el(
+    "section",
+    { class: "block" },
+    el("h3", {}, `Attachments (${attachments.length})`),
+    el("div", { class: "attachments-grid" }, cards)
+  );
+}
+
 function renderDetail(trace, { onReprocessed } = {}) {
   const pane = document.getElementById("detail-pane");
   pane.innerHTML = "";
@@ -350,6 +396,9 @@ function renderDetail(trace, { onReprocessed } = {}) {
       )
     )
   );
+
+  const attachmentsSection = renderAttachments(trace);
+  if (attachmentsSection) pane.appendChild(attachmentsSection);
 
   if (!extracted.policy_number) {
     pane.appendChild(renderFollowUp(trace, onReprocessed));
@@ -438,17 +487,91 @@ function renderDetail(trace, { onReprocessed } = {}) {
   }
 }
 
+function setupNewClaimModal(onCreated) {
+  const overlay = document.getElementById("new-claim-overlay");
+  const openBtn = document.getElementById("new-claim-btn");
+  const closeBtn = document.getElementById("new-claim-close");
+  const form = document.getElementById("new-claim-form");
+  const idInput = document.getElementById("new-claim-id");
+  const textInput = document.getElementById("new-claim-text");
+  const invoicesInput = document.getElementById("new-claim-invoices");
+  const photosInput = document.getElementById("new-claim-photos");
+  const submitBtn = document.getElementById("new-claim-submit");
+  const statusEl = document.getElementById("new-claim-status");
+
+  function open() {
+    idInput.value = `new-${Date.now()}`;
+    textInput.value = "";
+    invoicesInput.value = "";
+    photosInput.value = "";
+    statusEl.className = "followup-status";
+    statusEl.textContent = "";
+    overlay.hidden = false;
+    textInput.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+  }
+
+  openBtn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) close();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const claimId = idInput.value.trim();
+    const text = textInput.value.trim();
+    if (!claimId || !text) {
+      statusEl.className = "followup-status err";
+      statusEl.textContent = "Claim ID and narrative are both required.";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("claim_id", claimId);
+    formData.append("submitted_text", text);
+    for (const file of invoicesInput.files) formData.append("invoices", file);
+    for (const file of photosInput.files) formData.append("damage_photos", file);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting…";
+    statusEl.className = "followup-status";
+    statusEl.textContent = "Running the live agent - this can take 15-30s, longer with attachments…";
+
+    try {
+      const res = await fetch("/api/claims/process", { method: "POST", body: formData });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null);
+        throw new Error(detail && detail.detail ? detail.detail : `server returned ${res.status}`);
+      }
+      const trace = await res.json();
+      statusEl.classList.add("ok");
+      statusEl.textContent = `Created: ${decisionLabel(trace.decision)}`;
+      onCreated(trace);
+      close();
+    } catch (err) {
+      statusEl.classList.add("err");
+      statusEl.textContent =
+        err.message && err.message !== "Failed to fetch"
+          ? err.message
+          : "Couldn't reach the live agent. This only works when served via `dashboard/server.py` with ANTHROPIC_API_KEY set - not on a static hosted snapshot.";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit claim";
+    }
+  });
+}
+
 async function main() {
   const traces = await loadTraces();
   const filtersEl = document.getElementById("list-filters");
   const listEl = document.getElementById("claim-list");
-
-  if (traces.length === 0) {
-    filtersEl.innerHTML = "";
-    listEl.innerHTML =
-      '<div class="empty-state">No trace data yet. Run <code>python -m agent.run_batch</code> (needs ANTHROPIC_API_KEY), then reload.</div>';
-    return;
-  }
 
   const state = { decision: "all", lowConfidenceOnly: false, selectedClaimId: null };
 
@@ -467,6 +590,12 @@ async function main() {
   }
 
   function render() {
+    if (traces.length === 0) {
+      filtersEl.innerHTML = "";
+      listEl.innerHTML =
+        '<div class="empty-state">No trace data yet. Run <code>python -m agent.run_batch</code>, or use "+ New claim" above (needs ANTHROPIC_API_KEY either way).</div>';
+      return;
+    }
     renderFilters(traces, state, (patch) => {
       Object.assign(state, patch);
       render();
@@ -474,9 +603,20 @@ async function main() {
     renderList(applyFilters(traces, state), selectClaim, state.selectedClaimId);
   }
 
-  // Land on the first claim in the list (claim-001), not an auto-picked
-  // "most interesting" one - predictable beats clever here.
-  selectClaim(traces[0]);
+  setupNewClaimModal((trace) => {
+    const idx = traces.findIndex((t) => t.claim_id === trace.claim_id);
+    if (idx !== -1) traces[idx] = trace;
+    else traces.unshift(trace);
+    selectClaim(trace);
+  });
+
+  if (traces.length > 0) {
+    // Land on the first claim in the list (claim-001), not an auto-picked
+    // "most interesting" one - predictable beats clever here.
+    selectClaim(traces[0]);
+  } else {
+    render();
+  }
 }
 
 main();

@@ -21,7 +21,11 @@ an agentic-AI role won't bring.
    free-text guess parsed afterward, but as an actual typed tool call
    (`record_extracted_fields`). That's what makes the rest of the trace
    reliable: everything downstream is built on a value the model committed
-   to, not prose regex'd out of a paragraph.
+   to, not prose regex'd out of a paragraph. If the submission includes
+   attached invoice/bill PDFs or damage photos, Navigator reviews them as
+   real multimodal input (`record_attachment_review`) and can flag a claim
+   whose photo evidence or billed amount doesn't line up with the narrative
+   — not just text-only triage.
 2. **Atlas** (`atlas/`) is the semantic layer. Eight synthetic policies, their
    coverages, and their exclusions live in a small explicit structure
    (`atlas/data/policies.json`) queried through a tiny networkx graph
@@ -68,14 +72,20 @@ atlas/                  Policy/coverage knowledge base + graph queries
 agent/                  The Navigator agent
   schemas.py              Pydantic models for the decision trace
   tools.py                  Anthropic tool-use JSON schemas
-  fnol_agent.py              The extraction -> Atlas -> decision loop
+  fnol_agent.py              The extraction -> Atlas -> decision loop; process_claim (fresh),
+                               resume_claim (policy number attached after the fact), and the
+                               multimodal attachment content-block builder all live here
   generate_synthetic_claims.py  26 synthetic FNOL narratives + deliberate edge cases
   run_batch.py                   Runs every claim through the agent, saves traces
   data/claims/, data/traces/      Generated input/output (traces gitignored)
+  data/attachments/                Uploaded invoice PDFs / damage photos, per claim_id (gitignored)
 
 dashboard/               Prism trace viewer
-  index.html, app.js, styles.css   Static, no build step
-  server.py                          FastAPI: serves the static files + /api/claims
+  index.html, app.js, styles.css   Static, no build step; includes the "+ New claim" intake
+                                     modal (narrative + file uploads) and the Attachments card
+  server.py                          FastAPI: static files + /api/claims, /api/claims/process
+                                        (multipart, with attachments), /api/atlas/search,
+                                        /api/claims/{id}/resume, /api/claims/{id}/attachments/{filename}
 
 benchmark/               Serving cost/latency comparison (Part 4)
   common_prompts.py         Shared extraction prompt both benchmarks use
@@ -132,15 +142,26 @@ directly as a file (`dashboard/index.html`) once `data.js` exists, no server
 required — `server.py` additionally exposes `POST /api/claims/process` to
 run a brand-new narrative through the live agent from the browser.
 
+The **"+ New claim" button** in the header opens a demo intake form —
+narrative text plus optional invoice/bill PDFs and damage-photo JPG/PNGs.
+This stands in for the customer-facing portal that doesn't exist in this
+repo (in the real architecture, customers submit through their own channel,
+not through Prism, which is employee-only). Submitting runs the live agent
+with the attachments as real multimodal input and drops the new claim
+straight into the list. Each claim's detail view shows an **Attachments**
+card (photo thumbnails, PDF links) with the agent's per-attachment
+observation underneath, when any were provided.
+
 ### 5. Deploy the dashboard (optional)
 
 `vercel.json` at the repo root points Vercel at `dashboard/` as a static
 site — no build step, no backend, no API key needed to view it. It serves
 whatever's in `dashboard/data.js` at deploy time, so regenerate that (`python
 -m agent.run_batch`) and commit it before deploying to refresh what's shown.
-`/api/claims/process` (the live "run a new narrative through the agent"
-endpoint) only exists in `dashboard/server.py` and isn't part of this static
-deploy - the hosted version is read-only, on purpose.
+`/api/claims/process` and friends (the live "run a new narrative through the
+agent," Atlas search, and resume endpoints) only exist in
+`dashboard/server.py` and aren't part of this static deploy, including the
+"+ New claim" upload form - the hosted version is read-only, on purpose.
 
 ```bash
 npm i -g vercel   # one-time
@@ -188,5 +209,9 @@ This is a portfolio piece, not production software: no auth on the
 dashboard or API, no database (traces are flat JSON files), no retry/backoff
 tuning, no real PII (every name, policy number, and address is invented),
 and the vLLM benchmark numbers are honestly labeled as estimates rather than
-faked. The point is a coherent, explainable system end to end, not
-production hardening.
+faked. Attachment uploads get a content-type allowlist (PDF for invoices,
+JPG/PNG for photos) and a 10MB size cap, but nothing beyond that - no
+malware/virus scanning, no PII redaction in images, no retention policy for
+`agent/data/attachments/`, none of which a real intake system could skip.
+The point is a coherent, explainable system end to end, not production
+hardening.

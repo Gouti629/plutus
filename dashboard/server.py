@@ -4,22 +4,25 @@ JSON API over the traces the Navigator agent has produced.
 Run from the project root with:
     uvicorn dashboard.server:app --reload
 
-GET  /api/claims                  -> list of all saved traces (agent/data/traces/*.json)
-GET  /api/claims/{claim_id}       -> one trace
-POST /api/claims/process          -> run a new narrative through the live agent
-                                      (requires ANTHROPIC_API_KEY)
-GET  /api/atlas/search?name=...   -> search Atlas policies by holder name
-POST /api/claims/{claim_id}/resume -> attach a reviewer-resolved policy number
-                                      to an existing claim and resume
-                                      decisioning without re-extracting
+GET  /api/claims                       -> list of all saved traces (agent/data/traces/*.json)
+GET  /api/claims/{claim_id}            -> one trace
+POST /api/claims/process               -> run a new narrative (+ optional invoice/photo
+                                           attachments) through the live agent
+                                           (requires ANTHROPIC_API_KEY; multipart/form-data)
+GET  /api/claims/{claim_id}/attachments/{filename} -> serves one uploaded attachment
+GET  /api/atlas/search?name=...        -> search Atlas policies by holder name
+POST /api/claims/{claim_id}/resume     -> attach a reviewer-resolved policy number
+                                           to an existing claim and resume
+                                           decisioning without re-extracting
 """
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -27,10 +30,56 @@ from pydantic import BaseModel
 from agent.fnol_agent import DEFAULT_MODEL, process_claim, resume_claim
 from atlas import rules as atlas_rules
 
-TRACES_DIR = Path(__file__).parent.parent / "agent" / "data" / "traces"
+PROJECT_ROOT = Path(__file__).parent.parent
+TRACES_DIR = PROJECT_ROOT / "agent" / "data" / "traces"
+ATTACHMENTS_DIR = PROJECT_ROOT / "agent" / "data" / "attachments"
 STATIC_DIR = Path(__file__).parent
 
+ALLOWED_ATTACHMENT_TYPES = {
+    "invoice": {"application/pdf"},
+    "damage_photo": {"image/jpeg", "image/png"},
+}
+MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024  # 10MB per file - a sane guard, not a real limits review
+
 app = FastAPI(title="Prism - FNOL Decision Trace Viewer")
+
+
+def _safe_filename(name: str) -> str:
+    """Strips directory components and anything but ordinary filename
+    characters, so an uploaded/requested filename can't be used for path
+    traversal (e.g. '../../etc/passwd')."""
+    name = Path(name).name
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", name)
+    return name or "file"
+
+
+async def _save_attachments(claim_id: str, kind: str, files: list[UploadFile]) -> list[dict]:
+    allowed = ALLOWED_ATTACHMENT_TYPES[kind]
+    claim_dir = ATTACHMENTS_DIR / claim_id
+    saved = []
+    for f in files:
+        if f.content_type not in allowed:
+            raise HTTPException(
+                status_code=400,
+                detail=f"'{f.filename}' has unsupported type '{f.content_type}' for a {kind} attachment.",
+            )
+        data = await f.read()
+        if len(data) > MAX_ATTACHMENT_BYTES:
+            raise HTTPException(status_code=400, detail=f"'{f.filename}' exceeds the 10MB attachment limit.")
+        claim_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = _safe_filename(f.filename or "file")
+        dest = claim_dir / safe_name
+        dest.write_bytes(data)
+        saved.append(
+            {
+                "filename": safe_name,
+                "kind": kind,
+                "content_type": f.content_type,
+                "path": str(dest.relative_to(PROJECT_ROOT)),
+                "size_bytes": len(data),
+            }
+        )
+    return saved
 
 
 def _load_traces() -> list[dict]:
@@ -53,24 +102,39 @@ def get_claim(claim_id: str) -> dict:
     return json.loads(path.read_text())
 
 
-class ProcessRequest(BaseModel):
-    claim_id: str
-    submitted_text: str
-    model: str = DEFAULT_MODEL
-
-
 @app.post("/api/claims/process")
-def process_new_claim(req: ProcessRequest) -> dict:
-    """Run a narrative through the live agent and persist its trace.
+async def process_new_claim(
+    claim_id: str = Form(...),
+    submitted_text: str = Form(...),
+    model: str = Form(DEFAULT_MODEL),
+    invoices: list[UploadFile] = File(default=[]),
+    damage_photos: list[UploadFile] = File(default=[]),
+) -> dict:
+    """Run a narrative - plus any attached invoice PDFs / damage photos -
+    through the live agent and persist its trace.
 
     This is the "process a new submission end-to-end" path referenced in the
     README - it calls the real Anthropic API, so it needs ANTHROPIC_API_KEY.
+    multipart/form-data, not JSON, since it accepts file uploads.
     """
-    trace = process_claim(req.claim_id, req.submitted_text, model=req.model)
+    attachments = await _save_attachments(claim_id, "invoice", invoices)
+    attachments += await _save_attachments(claim_id, "damage_photo", damage_photos)
+
+    trace = process_claim(claim_id, submitted_text, attachments=attachments, model=model)
     trace_dict = trace.model_dump(mode="json")
     TRACES_DIR.mkdir(parents=True, exist_ok=True)
-    (TRACES_DIR / f"{req.claim_id}.json").write_text(json.dumps(trace_dict, indent=2))
+    (TRACES_DIR / f"{claim_id}.json").write_text(json.dumps(trace_dict, indent=2))
     return trace_dict
+
+
+@app.get("/api/claims/{claim_id}/attachments/{filename}")
+def get_attachment(claim_id: str, filename: str) -> FileResponse:
+    """Serves one uploaded attachment - used by the dashboard for damage-photo
+    thumbnails and invoice PDF links."""
+    path = ATTACHMENTS_DIR / _safe_filename(claim_id) / _safe_filename(filename)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"No attachment '{filename}' for claim_id '{claim_id}'.")
+    return FileResponse(path)
 
 
 @app.get("/api/atlas/search")

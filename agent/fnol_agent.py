@@ -1,26 +1,43 @@
 """The FNOL Navigator agent: extraction -> Atlas grounding -> decision.
 
 Core loop: send the claim narrative + tool definitions to Claude, dispatch
-each tool_use block Claude emits (record_extracted_fields / lookup_policy /
-check_policy_status / check_coverage / check_exclusions / submit_decision),
-feed the results back, and repeat until Claude calls submit_decision or we
-hit a turn cap. The full sequence of tool calls *is* the decision trace -
-there's no separate step where we ask the model to summarize what it did.
+each tool_use block Claude emits (record_extracted_fields /
+record_attachment_review / lookup_policy / check_policy_status /
+check_coverage / check_exclusions / submit_decision), feed the results back,
+and repeat until Claude calls submit_decision or we hit a turn cap. The full
+sequence of tool calls *is* the decision trace - there's no separate step
+where we ask the model to summarize what it did.
+
+Attached invoices/damage photos ride along as real multimodal content in the
+first user turn (image/document blocks, not a text description of them) -
+see _load_attachment_content_blocks.
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import os
+from pathlib import Path
 
 import anthropic
 
-from agent.schemas import Decision, DecisionTrace, EvidenceCitation, ExtractedFields, Flag, ToolCallRecord
+from agent.schemas import (
+    Attachment,
+    AttachmentReview,
+    Decision,
+    DecisionTrace,
+    EvidenceCitation,
+    ExtractedFields,
+    Flag,
+    ToolCallRecord,
+)
 from agent.tools import ALL_TOOLS
 from atlas import rules as atlas_rules
 
 DEFAULT_MODEL = os.environ.get("NAVIGATOR_MODEL", "claude-sonnet-4-5")
 MAX_TURNS = 8
+PROJECT_ROOT = Path(__file__).parent.parent
 
 SYSTEM_PROMPT = """You are Navigator, an intake triage agent for First Notice of Loss (FNOL) \
 submissions in P&C insurance claims. You read a policyholder's claim narrative and turn it into \
@@ -33,12 +50,21 @@ text: policyholder name, policy number, date/time of loss, loss type, location, 
 description, and estimated damage if stated. Use null for anything the text does not clearly \
 state - never guess a policy number, date, or dollar amount.
 
-2. If you extracted a policy_number, call check_policy_status (with the date of loss), then \
+2. If the submission includes attached invoice/bill documents or damage photos, look at each one \
+and call record_attachment_review with your honest observation of what it actually shows and \
+whether it's consistent with the narrative and the estimated damage - skip this tool entirely if \
+no attachments were provided. A photo that shows different, less severe, or no visible damage than \
+described, or an invoice whose total is far from the stated estimated_damage_usd, is grounds for a \
+flag even if the text-only fields look otherwise clean. A claim with a high estimated damage \
+(roughly above $10,000) and no supporting invoice or photo attached at all is itself worth a flag - \
+missing evidence is a data point, not nothing.
+
+3. If you extracted a policy_number, call check_policy_status (with the date of loss), then \
 check_coverage and check_exclusions for the loss_type you extracted. These are your only source \
 of truth about the policy - there is no policy data anywhere else in this conversation. If no \
 policy_number was extracted, skip these lookups.
 
-3. Decide:
+4. Decide:
    - "auto-approve intake": the policy is active on the date of loss, a coverage responds to the \
 loss type, no exclusion matches, the extraction is complete and unambiguous, and the estimated \
 damage (if stated) is not unusually high for the loss type.
@@ -51,11 +77,14 @@ present together.
 type, so you have nothing to look up - or the description is too vague to classify the loss at \
 all.
 
-4. Call submit_decision last. Every entry in the `evidence` array must be copied directly from \
+5. Call submit_decision last. Every entry in the `evidence` array must be copied directly from \
 the `evidence` field of a tool result you actually received earlier in this conversation - never \
-invent a citation, a rule_id, or a policy fact that didn't come back from a tool call. Set flags \
-for anything an adjuster should notice (missing fields, ambiguity, high value, a matched \
-exclusion, a policy status problem), even on claims you're auto-approving.
+invent a citation, a rule_id, or a policy fact that didn't come back from a tool call. An \
+attachment observation is not an `evidence` entry (that field is Atlas citations only) - it's \
+already captured by record_attachment_review, so reflect it in `reasoning_summary` and in a `flag` \
+if it raised a concern. Set flags for anything an adjuster should notice (missing fields, \
+ambiguity, high value, a matched exclusion, a policy status problem, attachment evidence that \
+doesn't line up), even on claims you're auto-approving.
 
 Be decisive: don't call the same lookup twice for the same policy/loss_type pair, and don't call \
 tools you don't need. If a policy number doesn't resolve (lookup_policy returns found: false), \
@@ -67,6 +96,7 @@ class AgentRunState:
 
     def __init__(self) -> None:
         self.extracted: ExtractedFields | None = None
+        self.attachment_reviews: list[AttachmentReview] = []
         self.decision: Decision | None = None
         self.confidence: float | None = None
         self.reasoning_summary: str | None = None
@@ -80,6 +110,9 @@ def dispatch_tool(tool_name: str, tool_input: dict, state: AgentRunState) -> dic
     """Execute one tool call against Atlas (or record a sink's payload)."""
     if tool_name == "record_extracted_fields":
         state.extracted = ExtractedFields(**tool_input)
+        return {"recorded": True}
+    if tool_name == "record_attachment_review":
+        state.attachment_reviews = [AttachmentReview(**r) for r in tool_input["reviews"]]
         return {"recorded": True}
     if tool_name == "lookup_policy":
         return atlas_rules.get_policy(tool_input["policy_number"])
@@ -142,7 +175,34 @@ def _run_agent_loop(
     return state
 
 
-def _build_trace(claim_id: str, submitted_text: str, state: AgentRunState, model: str) -> DecisionTrace:
+def _load_attachment_content_blocks(attachments: list[dict]) -> list[dict]:
+    """Turns saved attachment files into real multimodal content blocks - an
+    image block for damage photos, a document block for invoice PDFs - each
+    preceded by a small text label so the model can tie its
+    record_attachment_review filenames back to the right block."""
+    blocks: list[dict] = []
+    for att in attachments:
+        file_path = PROJECT_ROOT / att["path"]
+        data = base64.standard_b64encode(file_path.read_bytes()).decode("ascii")
+        blocks.append({"type": "text", "text": f"Attached {att['kind']} — filename: {att['filename']}"})
+        if att["kind"] == "damage_photo":
+            blocks.append(
+                {"type": "image", "source": {"type": "base64", "media_type": att["content_type"], "data": data}}
+            )
+        else:
+            blocks.append(
+                {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": data}}
+            )
+    return blocks
+
+
+def _build_trace(
+    claim_id: str,
+    submitted_text: str,
+    state: AgentRunState,
+    model: str,
+    attachments: list[dict] | None = None,
+) -> DecisionTrace:
     trace = DecisionTrace(
         claim_id=claim_id,
         submitted_text=submitted_text,
@@ -152,6 +212,8 @@ def _build_trace(claim_id: str, submitted_text: str, state: AgentRunState, model
         reasoning_summary=state.reasoning_summary,
         evidence=state.evidence,
         flags=state.flags,
+        attachments=[Attachment(**a) for a in (attachments or [])],
+        attachment_reviews=state.attachment_reviews,
         tool_calls=state.tool_calls,
         model=model,
     )
@@ -163,17 +225,27 @@ def _build_trace(claim_id: str, submitted_text: str, state: AgentRunState, model
 def process_claim(
     claim_id: str,
     submitted_text: str,
+    attachments: list[dict] | None = None,
     model: str = DEFAULT_MODEL,
     client: anthropic.Anthropic | None = None,
 ) -> DecisionTrace:
-    """Run one claim through the Navigator loop and return its full trace."""
+    """Run one claim through the Navigator loop and return its full trace.
+
+    `attachments`, if given, is a list of dicts (filename, kind, content_type,
+    path, size_bytes) for files already saved to disk under
+    agent/data/attachments/{claim_id}/ - see dashboard/server.py's upload
+    handling. Each is sent to Claude as real image/document content, not
+    described in text.
+    """
     client = client or anthropic.Anthropic()
     state = AgentRunState()
-    messages: list[dict] = [
-        {"role": "user", "content": f"New FNOL submission (claim_id={claim_id}):\n\n{submitted_text}"}
+    content: list[dict] = [
+        {"type": "text", "text": f"New FNOL submission (claim_id={claim_id}):\n\n{submitted_text}"}
     ]
+    content.extend(_load_attachment_content_blocks(attachments or []))
+    messages: list[dict] = [{"role": "user", "content": content}]
     state = _run_agent_loop(messages, state, model, client)
-    return _build_trace(claim_id, submitted_text, state, model)
+    return _build_trace(claim_id, submitted_text, state, model, attachments=attachments)
 
 
 def resume_claim(
