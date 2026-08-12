@@ -1,18 +1,18 @@
-# Plutus FNOL Navigator — a portfolio project
+# Paper Trail — a portfolio project
 
 A small, complete "agentic assist" for First Notice of Loss (FNOL) intake in
 P&C insurance — the first step when a policyholder reports a claim. An agent
 reads a claim narrative, extracts structured data, grounds every coverage
 and exclusion claim in an explicit policy knowledge base, decides how the
-claim should be triaged, and logs a full decision trace. A dashboard makes
-that trace reviewable, and a benchmark appendix compares two ways of serving
-the extraction step at volume.
+claim should be triaged, and logs a full decision trace — narrative,
+attachments, and all. A dashboard makes that trace reviewable, and a
+benchmark appendix compares two ways of serving the extraction step at
+volume.
 
-Built as a portfolio piece for a job application at [Plutus](https://plutustech.io)
-(agentic AI for insurance on ServiceNow). It deliberately mirrors their
-product architecture at small scale, and adds a serving/inference-optimization
-angle — cost, latency, and prefix caching at volume — that most applicants to
-an agentic-AI role won't bring.
+Built as a portfolio piece demonstrating agentic AI system design for
+insurance operations, with a serving/inference-optimization angle — cost,
+latency, and prefix caching at volume — that most applicants to an
+agentic-AI role won't bring.
 
 ## The five-minute story
 
@@ -51,13 +51,13 @@ an agentic-AI role won't bring.
    context) across every request. See `benchmark/results/results.md` for
    the numbers and what's measured vs. estimated.
 
-## Mapping to Plutus's architecture
+## Component overview
 
-| This project | Plutus | What it demonstrates |
+| Component | Role | What it demonstrates |
 |---|---|---|
-| `agent/` (Navigator) | **Navigator** — agentic orchestration | An agent that underwrites/triages in real time via tool calling, not a single free-text LLM call |
-| `atlas/` (Atlas) | **Atlas** — semantic layer / knowledge graph | Domain knowledge (policies, coverage, exclusions) as an explicit, queryable structure the agent grounds itself in, not baked into a prompt |
-| `dashboard/` (Prism) | **Prism** — real-time decision visualization | A reviewer-facing view of agent decisions with low-confidence/flagged items surfaced proactively |
+| `agent/` (Navigator) | Agentic orchestration | An agent that underwrites/triages in real time via tool calling, not a single free-text LLM call |
+| `atlas/` (Atlas) | Semantic layer / knowledge graph | Domain knowledge (policies, coverage, exclusions) as an explicit, queryable structure the agent grounds itself in, not baked into a prompt |
+| `dashboard/` (Prism) | Real-time decision visualization | A reviewer-facing view of agent decisions with low-confidence/flagged items surfaced proactively |
 | `benchmark/` | *(differentiator)* | Serving cost/latency/KV-cache tradeoffs — the kind of inference-optimization reasoning most agentic-AI candidates don't bring |
 
 ## Repository layout
@@ -100,7 +100,7 @@ benchmark/               Serving cost/latency comparison (Part 4)
 ### 1. Setup
 
 ```bash
-cd plutus-fnol-navigator
+cd paper-trail-agent
 python -m venv .venv
 .venv\Scripts\activate        # Windows; use `source .venv/bin/activate` on macOS/Linux
 pip install -r requirements.txt

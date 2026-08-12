@@ -29,38 +29,41 @@ block for exact values before using them):
 Every new color decision must be a token, not a one-off value, and must have
 a reason to pick a *new* token vs. reusing an existing one.
 
-**Palette source: plutustech.io.** The user asked for this project's palette
-to be pulled from the real Plutus company site (this is a portfolio piece
-for a Plutus job application). `WebFetch` on that URL returns markdown and
-strips all CSS/color info - the working approach was `curl`-ing the raw HTML
-directly and grepping for `#[0-9a-fA-F]{3,8}` hex patterns, then counting
-frequency to separate the real palette from one-off decorative gradient
-stops. That surfaced three real, distinct color families in their site:
-near-black grounds (`#000017`, `#0b1a2a`), a translucent cyan-blue glow
-(`#4cc3ff`, `#67a2c5`, `#2f8ac4` - used at varying alpha, i.e. the same
-"glass panel" technique already in use here), and a very-high-frequency warm
-orange (`#ff9d2e`) that reads as their hero/brand signature color.
+**Palette source: pulled from a real external reference site.** The user
+asked for this project's palette to be sourced from a specific company's
+marketing site rather than invented from scratch (the company isn't named
+here - this project isn't tied to any one target employer). `WebFetch` on
+that URL returns markdown and strips all CSS/color info - the working
+approach was `curl`-ing the raw HTML directly and grepping for
+`#[0-9a-fA-F]{3,8}` hex patterns, then counting frequency to separate the
+real palette from one-off decorative gradient stops. That surfaced three
+real, distinct color families in the source site: near-black grounds
+(`#000017`, `#0b1a2a`), a translucent cyan-blue glow (`#4cc3ff`, `#67a2c5`,
+`#2f8ac4` - used at varying alpha, i.e. the same "glass panel" technique
+already in use here), and a very-high-frequency warm orange (`#ff9d2e`) that
+reads as a hero/brand signature color.
 
 Those three roles are assigned deliberately, not dumped in wholesale:
 - **Black ground** (`--surface-2: #000000` dark) - direct match, already
   matched what "pitch black" had asked for.
 - **Blue as `--accent`** (`#4cc3ff` dark / `#235f8f` light, both literal
-  values from their site) - blue doesn't collide with the status spectrum
-  (good/warning/serious/critical already spans green-gold-orange-red), so it
-  stays legible as "this is generally interactive" vs. "this specific item
-  needs review." Two earlier accent attempts (blue-navy neutrals, then
-  violet) were each explicitly replaced - don't reintroduce either.
+  values from the source site) - blue doesn't collide with the status
+  spectrum (good/warning/serious/critical already spans
+  green-gold-orange-red), so it stays legible as "this is generally
+  interactive" vs. "this specific item needs review." Two earlier accent
+  attempts (blue-navy neutrals, then violet) were each explicitly replaced -
+  don't reintroduce either.
 - **Orange reserved for `--mark-flourish`** (`#ff9d2e` dark / `#e08526`
-  light) - used *only* for the header mark's incoming ray (`.mark-in`). Their
-  orange is authentic and worth keeping visible, but making it the general
-  UI accent would collide with `--status-serious` (already orange) and make
-  "just clickable" indistinguishable from "flagged as serious" in a tool
-  whose entire job is surfacing what needs review - that's the actual reason
-  it's confined to one decorative element instead of used pervasively.
+  light) - used *only* for the header mark's incoming ray (`.mark-in`). The
+  source orange is distinctive and worth keeping visible, but making it the
+  general UI accent would collide with `--status-serious` (already orange)
+  and make "just clickable" indistinguishable from "flagged as serious" in a
+  tool whose entire job is surfacing what needs review - that's the actual
+  reason it's confined to one decorative element instead of used pervasively.
 
 `--surface-1` is deliberately translucent (`rgba(...)`, not a flat hex) in
 both themes - it's the "glass" layer floating over the solid `--surface-2`
-ground, using their own `#67a2c5` blue-steel hue at low opacity
+ground, using the source site's `#67a2c5` blue-steel hue at low opacity
 (`rgba(103, 162, 197, 0.08-0.26)` range in dark). Any element using
 `--surface-1` should also get `backdrop-filter: blur(var(--glass-blur))`
 (+ `-webkit-` prefix) so it reads as glass - see `header`, `section.block`.
@@ -131,12 +134,13 @@ muted labels and captions (`text-transform: uppercase` +
 
 `.brand` in the header pairs a small inline SVG (`.mark`) with the "Prism"
 wordmark. The mark is a literal visual pun on the product name: one line in
-`--mark-flourish` (Plutus's brand orange, `#ff9d2e` dark) enters a triangle,
-three lines exit colored `--status-good`/`--status-warning`/`--status-critical`
-- light splitting into the same outcome colors used everywhere else in the
-UI. It's the one deliberately "designed" flourish in an otherwise restrained,
-utilitarian tool, and the one place the Plutus orange appears at all - don't
-add a second flourish, and don't pull the orange into general UI use (see the
+`--mark-flourish` (the source site's brand orange, `#ff9d2e` dark) enters a
+triangle, three lines exit colored
+`--status-good`/`--status-warning`/`--status-critical` - light splitting
+into the same outcome colors used everywhere else in the UI. It's the one
+deliberately "designed" flourish in an otherwise restrained, utilitarian
+tool, and the one place that orange appears at all - don't add a second
+flourish, and don't pull the orange into general UI use (see the
 palette-source note above for why).
 
 ## Filter tiles (`.list-filters` / `.filter-tile`)

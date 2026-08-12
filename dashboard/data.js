@@ -10,12 +10,12 @@ const FNOL_TRACES = [
       "time_of_loss": "5:30pm",
       "loss_type": "auto_collision",
       "location": "Route 9 in Albany, NY",
-      "description": "Policyholder was rear-ended by another driver at a stoplight, resulting in damage to rear bumper and trunk with no injuries.",
+      "description": "Policyholder was rear-ended by another driver at a stoplight, resulting in damage to rear bumper and trunk.",
       "estimated_damage_usd": 4200.0
     },
     "decision": "auto-approve intake",
     "confidence": 0.95,
-    "reasoning_summary": "The policy POL-10234 was active on the loss date (2026-07-14). Collision coverage responds to this auto_collision loss with a $50,000 limit and $500 deductible. The estimated damage of $4,200 is well within limits and reasonable for rear-end collision damage. While a racing exclusion exists on the policy, it does not apply to this straightforward rear-end collision at a stoplight.",
+    "reasoning_summary": "Maria Alvarez's policy POL-10234 was active on the date of loss (2026-07-14). The claim describes a rear-end collision at a stoplight, which is covered under the collision coverage with a $50,000 limit and $500 deductible. The estimated damage of $4,200 is reasonable for rear bumper and trunk damage. While a racing exclusion exists on the policy, it does not apply to this straightforward stoplight collision scenario.",
     "evidence": [
       {
         "source": "policy:POL-10234.status",
@@ -30,11 +30,13 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "EXCLUSION_ON_FILE",
-        "message": "Policy has racing exclusion (EXCL-RACING) but does not apply to this standard collision claim",
+        "code": "EXCLUSION_ON_POLICY",
+        "message": "Policy has racing exclusion (EXCL-RACING), but does not apply to this stoplight collision scenario",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -46,7 +48,7 @@ const FNOL_TRACES = [
           "loss_type": "auto_collision",
           "location": "Route 9 in Albany, NY",
           "estimated_damage_usd": 4200,
-          "description": "Policyholder was rear-ended by another driver at a stoplight, resulting in damage to rear bumper and trunk with no injuries."
+          "description": "Policyholder was rear-ended by another driver at a stoplight, resulting in damage to rear bumper and trunk."
         },
         "tool_result": {
           "recorded": true
@@ -64,6 +66,42 @@ const FNOL_TRACES = [
           "evidence": {
             "source": "policy:POL-10234.status",
             "text": "Policy status is 'active'; term 2025-11-01 to 2026-11-01."
+          }
+        }
+      },
+      {
+        "tool_name": "lookup_policy",
+        "tool_input": {
+          "policy_number": "POL-10234"
+        },
+        "tool_result": {
+          "found": true,
+          "policy_number": "POL-10234",
+          "policyholder_name": "Maria Alvarez",
+          "policy_type": "auto",
+          "status": "active",
+          "effective_date": "2025-11-01",
+          "expiration_date": "2026-11-01",
+          "coverages": [
+            {
+              "coverage_type": "collision",
+              "limit": 50000,
+              "deductible": 500
+            },
+            {
+              "coverage_type": "comprehensive",
+              "limit": 50000,
+              "deductible": 500
+            },
+            {
+              "coverage_type": "liability",
+              "limit": 100000,
+              "deductible": 0
+            }
+          ],
+          "evidence": {
+            "source": "policy:POL-10234",
+            "text": "Maria Alvarez's auto policy POL-10234, status=active, effective 2025-11-01 to 2026-11-01."
           }
         }
       },
@@ -111,7 +149,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "auto-approve intake",
           "confidence": 0.95,
-          "reasoning_summary": "The policy POL-10234 was active on the loss date (2026-07-14). Collision coverage responds to this auto_collision loss with a $50,000 limit and $500 deductible. The estimated damage of $4,200 is well within limits and reasonable for rear-end collision damage. While a racing exclusion exists on the policy, it does not apply to this straightforward rear-end collision at a stoplight.",
+          "reasoning_summary": "Maria Alvarez's policy POL-10234 was active on the date of loss (2026-07-14). The claim describes a rear-end collision at a stoplight, which is covered under the collision coverage with a $50,000 limit and $500 deductible. The estimated damage of $4,200 is reasonable for rear bumper and trunk damage. While a racing exclusion exists on the policy, it does not apply to this straightforward stoplight collision scenario.",
           "evidence": [
             {
               "source": "policy:POL-10234.status",
@@ -120,14 +158,14 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-10234.coverages[0]",
-              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses.",
-              "rule_id": "COV-1"
+              "rule_id": "COV-1",
+              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses."
             }
           ],
           "flags": [
             {
-              "code": "EXCLUSION_ON_FILE",
-              "message": "Policy has racing exclusion (EXCL-RACING) but does not apply to this standard collision claim",
+              "code": "EXCLUSION_ON_POLICY",
+              "message": "Policy has racing exclusion (EXCL-RACING), but does not apply to this stoplight collision scenario",
               "severity": "info"
             }
           ]
@@ -140,7 +178,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean auto collision, active policy, covered -> expect auto-approve",
-    "latency_seconds": 15.76
+    "latency_seconds": 16.34
   },
   {
     "claim_id": "claim-002",
@@ -157,7 +195,7 @@ const FNOL_TRACES = [
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The claim is complete and well-documented: a burst washing machine hose caused sudden water damage to flooring and drywall, with estimated damage of $6,500. Coverage for water_damage_sudden is available under the dwelling coverage with a $300,000 limit and $1,000 deductible, and no exclusions apply. However, the loss occurred on July 2, 2026, which is 17 days after the policy's expiration date of June 15, 2026. The policy was not in force at the time of loss, requiring adjuster review to verify renewal status or discuss options with the policyholder.",
+    "reasoning_summary": "The policy was expired on the date of loss. POL-10891 expired on June 15, 2026, but the washing machine hose burst occurred on July 2, 2026 - 17 days after expiration. While the loss type (sudden water damage from a burst hose) would normally be covered under the dwelling coverage with a $1,000 deductible and the estimated damage of $6,500 is reasonable, the policy was not in force at the time of the loss. This requires adjuster review to confirm the lapse and determine if any grace period or renewal applies.",
     "evidence": [
       {
         "source": "policy:POL-10891",
@@ -178,15 +216,12 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "POLICY_EXPIRED",
-        "message": "Loss date 2026-07-02 is 17 days after policy expiration date 2026-06-15. Verify renewal status.",
+        "message": "Loss date 2026-07-02 is 17 days after policy expiration date 2026-06-15. Policy was not in force at time of loss.",
         "severity": "critical"
-      },
-      {
-        "code": "MITIGATION_TAKEN",
-        "message": "Policyholder reports plumber already capped the line.",
-        "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -289,7 +324,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The claim is complete and well-documented: a burst washing machine hose caused sudden water damage to flooring and drywall, with estimated damage of $6,500. Coverage for water_damage_sudden is available under the dwelling coverage with a $300,000 limit and $1,000 deductible, and no exclusions apply. However, the loss occurred on July 2, 2026, which is 17 days after the policy's expiration date of June 15, 2026. The policy was not in force at the time of loss, requiring adjuster review to verify renewal status or discuss options with the policyholder.",
+          "reasoning_summary": "The policy was expired on the date of loss. POL-10891 expired on June 15, 2026, but the washing machine hose burst occurred on July 2, 2026 - 17 days after expiration. While the loss type (sudden water damage from a burst hose) would normally be covered under the dwelling coverage with a $1,000 deductible and the estimated damage of $6,500 is reasonable, the policy was not in force at the time of the loss. This requires adjuster review to confirm the lapse and determine if any grace period or renewal applies.",
           "evidence": [
             {
               "source": "policy:POL-10891",
@@ -310,13 +345,8 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "POLICY_EXPIRED",
-              "message": "Loss date 2026-07-02 is 17 days after policy expiration date 2026-06-15. Verify renewal status.",
+              "message": "Loss date 2026-07-02 is 17 days after policy expiration date 2026-06-15. Policy was not in force at time of loss.",
               "severity": "critical"
-            },
-            {
-              "code": "MITIGATION_TAKEN",
-              "message": "Policyholder reports plumber already capped the line.",
-              "severity": "info"
             }
           ]
         },
@@ -328,7 +358,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean homeowners sudden water damage, active, covered -> auto-approve",
-    "latency_seconds": 17.34
+    "latency_seconds": 16.48
   },
   {
     "claim_id": "claim-003",
@@ -340,30 +370,32 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "theft",
       "location": "parking lot at apartment complex",
-      "description": "Someone broke into the policyholder's car and stole a laptop and bag of tools from the trunk while parked at their apartment complex.",
+      "description": "Someone broke into the policyholder's car and stole a laptop and bag of tools from the trunk while parked at an apartment complex parking lot.",
       "estimated_damage_usd": null
     },
     "decision": "request more info",
     "confidence": 0.95,
-    "reasoning_summary": "The policyholder has not provided a policy number, and the system cannot look up policies by name alone. While the loss type (theft from vehicle) is clear and the description is adequate, we cannot verify policy status, coverage, or exclusions without a valid policy number. The claim requires the policyholder to provide their policy number before intake can proceed.",
+    "reasoning_summary": "The claimant did not provide a policy number and states they don't have it available. Without a policy number, I cannot verify policy status, coverage, or exclusions. Additionally, the date of loss is stated only as \"last night\" without a specific date, and no estimated damage amount was provided. A policy number and specific date of loss are required to proceed with intake validation.",
     "evidence": [],
     "flags": [
       {
         "code": "MISSING_POLICY_NUMBER",
-        "message": "No policy number provided; policyholder asked if we can look up by name (David Kim). System requires policy number to verify coverage.",
+        "message": "No policy number provided; claimant requested lookup by name which is not supported",
         "severity": "critical"
       },
       {
         "code": "MISSING_DATE_OF_LOSS",
-        "message": "Date of loss not specified - only stated as 'last night', which is ambiguous without submission timestamp.",
+        "message": "Date of loss stated as 'last night' but no specific date provided",
         "severity": "warning"
       },
       {
         "code": "MISSING_DAMAGE_ESTIMATE",
-        "message": "No estimated value provided for stolen items (laptop and bag of tools).",
-        "severity": "info"
+        "message": "No estimated value provided for stolen items (laptop and tools)",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -375,7 +407,7 @@ const FNOL_TRACES = [
           "loss_type": "theft",
           "location": "parking lot at apartment complex",
           "estimated_damage_usd": null,
-          "description": "Someone broke into the policyholder's car and stole a laptop and bag of tools from the trunk while parked at their apartment complex."
+          "description": "Someone broke into the policyholder's car and stole a laptop and bag of tools from the trunk while parked at an apartment complex parking lot."
         },
         "tool_result": {
           "recorded": true
@@ -386,23 +418,23 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "request more info",
           "confidence": 0.95,
-          "reasoning_summary": "The policyholder has not provided a policy number, and the system cannot look up policies by name alone. While the loss type (theft from vehicle) is clear and the description is adequate, we cannot verify policy status, coverage, or exclusions without a valid policy number. The claim requires the policyholder to provide their policy number before intake can proceed.",
+          "reasoning_summary": "The claimant did not provide a policy number and states they don't have it available. Without a policy number, I cannot verify policy status, coverage, or exclusions. Additionally, the date of loss is stated only as \"last night\" without a specific date, and no estimated damage amount was provided. A policy number and specific date of loss are required to proceed with intake validation.",
           "evidence": [],
           "flags": [
             {
               "code": "MISSING_POLICY_NUMBER",
-              "message": "No policy number provided; policyholder asked if we can look up by name (David Kim). System requires policy number to verify coverage.",
+              "message": "No policy number provided; claimant requested lookup by name which is not supported",
               "severity": "critical"
             },
             {
               "code": "MISSING_DATE_OF_LOSS",
-              "message": "Date of loss not specified - only stated as 'last night', which is ambiguous without submission timestamp.",
+              "message": "Date of loss stated as 'last night' but no specific date provided",
               "severity": "warning"
             },
             {
               "code": "MISSING_DAMAGE_ESTIMATE",
-              "message": "No estimated value provided for stolen items (laptop and bag of tools).",
-              "severity": "info"
+              "message": "No estimated value provided for stolen items (laptop and tools)",
+              "severity": "warning"
             }
           ]
         },
@@ -414,7 +446,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "missing policy number entirely -> expect request more info",
-    "latency_seconds": 11.65
+    "latency_seconds": 11.26
   },
   {
     "claim_id": "claim-004",
@@ -425,13 +457,13 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-06-28",
       "time_of_loss": null,
       "loss_type": "flood",
-      "location": "basement of residence",
-      "description": "Creek behind house overflowed after storm, causing approximately 8 inches of water to enter the basement. Damaged items include carpet, boxes, and water heater.",
+      "location": null,
+      "description": "Creek behind house overflowed during storm, causing eight inches of water to enter the basement. Damage to carpet, boxes, and water heater.",
       "estimated_damage_usd": 18000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The claim presents two critical issues that require adjuster review. First, the loss occurred on 2026-06-28, which is 13 days after the policy's expiration date of 2026-06-15, meaning the policy was not in force at the time of loss. Second, the loss is classic flood damage (creek overflow causing surface water intrusion), which is explicitly excluded under exclusion EXCL-FLOOD. The policy has no flood coverage, and standard homeowners flood exclusions apply.",
+    "reasoning_summary": "This claim presents two critical issues. First, the loss date (2026-06-28) is 13 days after the policy expired on 2026-06-15, meaning no coverage is in force. Second, even if the policy were active, flood damage from creek overflow is explicitly excluded under EXCL-FLOOD, and the policy carries no flood coverage. The policyholder would need a separate flood policy (typically through NFIP or private flood insurance) for this type of loss.",
     "evidence": [
       {
         "source": "policy:POL-10891.status",
@@ -452,20 +484,22 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "POLICY_EXPIRED",
-        "message": "Loss date 2026-06-28 is after policy expiration 2026-06-15; policy not in force at time of loss",
+        "message": "Loss occurred on 2026-06-28, but policy expired on 2026-06-15 (13 days prior).",
         "severity": "critical"
       },
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Flood exclusion EXCL-FLOOD applies to creek overflow/surface water damage",
+        "message": "Flood exclusion EXCL-FLOOD applies: creek overflow is excluded surface water damage requiring separate flood policy.",
         "severity": "critical"
       },
       {
         "code": "NO_COVERAGE",
-        "message": "No flood coverage on policy; only dwelling, personal_property, and water_damage_sudden coverages present",
+        "message": "Policy has no flood coverage. Only dwelling, personal_property, and water_damage_sudden coverages are on file.",
         "severity": "critical"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -475,48 +509,12 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-06-28",
           "time_of_loss": null,
           "loss_type": "flood",
-          "location": "basement of residence",
+          "location": null,
           "estimated_damage_usd": 18000,
-          "description": "Creek behind house overflowed after storm, causing approximately 8 inches of water to enter the basement. Damaged items include carpet, boxes, and water heater."
+          "description": "Creek behind house overflowed during storm, causing eight inches of water to enter the basement. Damage to carpet, boxes, and water heater."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-10891"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-10891",
-          "policyholder_name": "James Whitfield",
-          "policy_type": "homeowners",
-          "status": "active",
-          "effective_date": "2025-06-15",
-          "expiration_date": "2026-06-15",
-          "coverages": [
-            {
-              "coverage_type": "dwelling",
-              "limit": 300000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "personal_property",
-              "limit": 150000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "water_damage_sudden",
-              "limit": 50000,
-              "deductible": 1000
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-10891",
-            "text": "James Whitfield's homeowners policy POL-10891, status=active, effective 2025-06-15 to 2026-06-15."
-          }
         }
       },
       {
@@ -575,7 +573,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The claim presents two critical issues that require adjuster review. First, the loss occurred on 2026-06-28, which is 13 days after the policy's expiration date of 2026-06-15, meaning the policy was not in force at the time of loss. Second, the loss is classic flood damage (creek overflow causing surface water intrusion), which is explicitly excluded under exclusion EXCL-FLOOD. The policy has no flood coverage, and standard homeowners flood exclusions apply.",
+          "reasoning_summary": "This claim presents two critical issues. First, the loss date (2026-06-28) is 13 days after the policy expired on 2026-06-15, meaning no coverage is in force. Second, even if the policy were active, flood damage from creek overflow is explicitly excluded under EXCL-FLOOD, and the policy carries no flood coverage. The policyholder would need a separate flood policy (typically through NFIP or private flood insurance) for this type of loss.",
           "evidence": [
             {
               "source": "policy:POL-10891.status",
@@ -596,17 +594,17 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "POLICY_EXPIRED",
-              "message": "Loss date 2026-06-28 is after policy expiration 2026-06-15; policy not in force at time of loss",
+              "message": "Loss occurred on 2026-06-28, but policy expired on 2026-06-15 (13 days prior).",
               "severity": "critical"
             },
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Flood exclusion EXCL-FLOOD applies to creek overflow/surface water damage",
+              "message": "Flood exclusion EXCL-FLOOD applies: creek overflow is excluded surface water damage requiring separate flood policy.",
               "severity": "critical"
             },
             {
               "code": "NO_COVERAGE",
-              "message": "No flood coverage on policy; only dwelling, personal_property, and water_damage_sudden coverages present",
+              "message": "Policy has no flood coverage. Only dwelling, personal_property, and water_damage_sudden coverages are on file.",
               "severity": "critical"
             }
           ]
@@ -619,7 +617,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "flood, excluded loss type on POL-10891 -> expect flag for adjuster review",
-    "latency_seconds": 17.48
+    "latency_seconds": 17.99
   },
   {
     "claim_id": "claim-005",
@@ -630,19 +628,14 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-20",
       "time_of_loss": null,
       "loss_type": "auto_collision",
-      "location": "driveway",
-      "description": "Policyholder backed out of driveway and clipped mailbox post, denting the rear quarter panel of the vehicle.",
+      "location": "policyholder's driveway",
+      "description": "Policyholder was backing out of driveway and clipped the mailbox post, causing a dent to the rear quarter panel.",
       "estimated_damage_usd": 1800.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "Policy POL-11045 was lapsed at the time of loss. The loss occurred on 2026-07-20, but the policy expired on 2026-01-15. Although collision coverage would normally respond to this type of loss (backing into a mailbox post), and the damage estimate of $1,800 is reasonable, no coverage exists because the policy was not active on the date of loss. This claim requires adjuster review to confirm the lapse and determine next steps.",
+    "reasoning_summary": "The claim narrative is clear and complete: policyholder backed into mailbox post, damaging rear quarter panel with an estimated $1,800 in damage. While the policy has collision coverage that would respond to this loss type, the policy was lapsed at the time of loss\u2014it expired on 2026-01-15, but the loss occurred on 2026-07-20, more than six months later. This requires adjuster review to determine eligibility.",
     "evidence": [
-      {
-        "source": "policy:POL-11045",
-        "rule_id": null,
-        "text": "Priya Natarajan's auto policy POL-11045, status=lapsed, effective 2025-01-15 to 2026-01-15."
-      },
       {
         "source": "policy:POL-11045.status",
         "rule_id": null,
@@ -657,10 +650,12 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "POLICY_LAPSED",
-        "message": "Policy POL-11045 lapsed on 2026-01-15; loss occurred 2026-07-20 (6 months after expiration)",
+        "message": "Policy POL-11045 was lapsed at time of loss. Policy expired 2026-01-15; loss occurred 2026-07-20.",
         "severity": "critical"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -670,48 +665,12 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-07-20",
           "time_of_loss": null,
           "loss_type": "auto_collision",
-          "location": "driveway",
-          "description": "Policyholder backed out of driveway and clipped mailbox post, denting the rear quarter panel of the vehicle.",
-          "estimated_damage_usd": 1800
+          "location": "policyholder's driveway",
+          "estimated_damage_usd": 1800,
+          "description": "Policyholder was backing out of driveway and clipped the mailbox post, causing a dent to the rear quarter panel."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11045"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11045",
-          "policyholder_name": "Priya Natarajan",
-          "policy_type": "auto",
-          "status": "lapsed",
-          "effective_date": "2025-01-15",
-          "expiration_date": "2026-01-15",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 40000,
-              "deductible": 500
-            },
-            {
-              "coverage_type": "comprehensive",
-              "limit": 40000,
-              "deductible": 500
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 100000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11045",
-            "text": "Priya Natarajan's auto policy POL-11045, status=lapsed, effective 2025-01-15 to 2026-01-15."
-          }
         }
       },
       {
@@ -763,13 +722,8 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "Policy POL-11045 was lapsed at the time of loss. The loss occurred on 2026-07-20, but the policy expired on 2026-01-15. Although collision coverage would normally respond to this type of loss (backing into a mailbox post), and the damage estimate of $1,800 is reasonable, no coverage exists because the policy was not active on the date of loss. This claim requires adjuster review to confirm the lapse and determine next steps.",
+          "reasoning_summary": "The claim narrative is clear and complete: policyholder backed into mailbox post, damaging rear quarter panel with an estimated $1,800 in damage. While the policy has collision coverage that would respond to this loss type, the policy was lapsed at the time of loss\u2014it expired on 2026-01-15, but the loss occurred on 2026-07-20, more than six months later. This requires adjuster review to determine eligibility.",
           "evidence": [
-            {
-              "source": "policy:POL-11045",
-              "text": "Priya Natarajan's auto policy POL-11045, status=lapsed, effective 2025-01-15 to 2026-01-15.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11045.status",
               "text": "Policy status is 'lapsed'; term 2025-01-15 to 2026-01-15.",
@@ -784,7 +738,7 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "POLICY_LAPSED",
-              "message": "Policy POL-11045 lapsed on 2026-01-15; loss occurred 2026-07-20 (6 months after expiration)",
+              "message": "Policy POL-11045 was lapsed at time of loss. Policy expired 2026-01-15; loss occurred 2026-07-20.",
               "severity": "critical"
             }
           ]
@@ -797,7 +751,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "lapsed policy, loss date after expiration -> expect flag",
-    "latency_seconds": 19.91
+    "latency_seconds": 15.19
   },
   {
     "claim_id": "claim-006",
@@ -809,12 +763,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "water_damage_gradual",
       "location": null,
-      "description": "Water stain discovered spreading across kitchen ceiling this week. Upon inspection, evidence shows water has been getting in for an extended period. Exact start date unknown.",
+      "description": "Water stain discovered spreading across kitchen ceiling this week. Upon opening ceiling, evidence of water intrusion over an extended period. Start date unknown.",
       "estimated_damage_usd": null
     },
     "decision": "flag for adjuster review",
     "confidence": 0.92,
-    "reasoning_summary": "The claimant discovered a water stain in their kitchen ceiling that shows evidence of long-term water intrusion with no known start date. Policy POL-10891 is active but only covers sudden and accidental water damage (water_damage_sudden), not gradual leaks. The loss explicitly matches exclusion EXCL-GRADUAL-WATER for gradual leaks and seepage. This claim requires adjuster review to confirm the nature of the loss and explain the coverage limitation.",
+    "reasoning_summary": "Policy POL-10891 is active, but the loss type is water_damage_gradual (long-term leak discovered in kitchen ceiling with unknown start date). The policy explicitly excludes gradual water damage and only covers sudden and accidental water discharge. Additionally, no specific date of loss could be extracted, making policy status verification incomplete. This claim requires adjuster review due to the exclusion match and ambiguous loss date.",
     "evidence": [
       {
         "source": "policy:POL-10891",
@@ -834,21 +788,23 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "NO_COVERAGE_GRADUAL_WATER",
-        "message": "Policy only covers sudden/accidental water damage, not gradual leaks or seepage",
-        "severity": "critical"
-      },
-      {
         "code": "EXCLUSION_MATCH",
-        "message": "Loss matches exclusion EXCL-GRADUAL-WATER for gradual water damage",
+        "message": "Policy exclusion EXCL-GRADUAL-WATER applies to gradual water damage; only sudden and accidental water discharge is covered",
         "severity": "critical"
       },
       {
-        "code": "MISSING_LOSS_DATE",
-        "message": "No specific date of loss provided; claimant states water intrusion occurred over extended period",
+        "code": "MISSING_DATE_OF_LOSS",
+        "message": "No specific date of loss provided; policyholder states leak has been ongoing for unknown duration",
         "severity": "warning"
+      },
+      {
+        "code": "NO_COVERAGE_RESPONDS",
+        "message": "No coverage on policy POL-10891 responds to loss_type water_damage_gradual",
+        "severity": "critical"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -860,7 +816,7 @@ const FNOL_TRACES = [
           "loss_type": "water_damage_gradual",
           "location": null,
           "estimated_damage_usd": null,
-          "description": "Water stain discovered spreading across kitchen ceiling this week. Upon inspection, evidence shows water has been getting in for an extended period. Exact start date unknown."
+          "description": "Water stain discovered spreading across kitchen ceiling this week. Upon opening ceiling, evidence of water intrusion over an extended period. Start date unknown."
         },
         "tool_result": {
           "recorded": true
@@ -943,7 +899,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.92,
-          "reasoning_summary": "The claimant discovered a water stain in their kitchen ceiling that shows evidence of long-term water intrusion with no known start date. Policy POL-10891 is active but only covers sudden and accidental water damage (water_damage_sudden), not gradual leaks. The loss explicitly matches exclusion EXCL-GRADUAL-WATER for gradual leaks and seepage. This claim requires adjuster review to confirm the nature of the loss and explain the coverage limitation.",
+          "reasoning_summary": "Policy POL-10891 is active, but the loss type is water_damage_gradual (long-term leak discovered in kitchen ceiling with unknown start date). The policy explicitly excludes gradual water damage and only covers sudden and accidental water discharge. Additionally, no specific date of loss could be extracted, making policy status verification incomplete. This claim requires adjuster review due to the exclusion match and ambiguous loss date.",
           "evidence": [
             {
               "source": "policy:POL-10891",
@@ -963,19 +919,19 @@ const FNOL_TRACES = [
           ],
           "flags": [
             {
-              "code": "NO_COVERAGE_GRADUAL_WATER",
-              "message": "Policy only covers sudden/accidental water damage, not gradual leaks or seepage",
-              "severity": "critical"
-            },
-            {
               "code": "EXCLUSION_MATCH",
-              "message": "Loss matches exclusion EXCL-GRADUAL-WATER for gradual water damage",
+              "message": "Policy exclusion EXCL-GRADUAL-WATER applies to gradual water damage; only sudden and accidental water discharge is covered",
               "severity": "critical"
             },
             {
-              "code": "MISSING_LOSS_DATE",
-              "message": "No specific date of loss provided; claimant states water intrusion occurred over extended period",
+              "code": "MISSING_DATE_OF_LOSS",
+              "message": "No specific date of loss provided; policyholder states leak has been ongoing for unknown duration",
               "severity": "warning"
+            },
+            {
+              "code": "NO_COVERAGE_RESPONDS",
+              "message": "No coverage on policy POL-10891 responds to loss_type water_damage_gradual",
+              "severity": "critical"
             }
           ]
         },
@@ -987,7 +943,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "ambiguous water damage (sudden vs gradual not stated) -> expect flag or request info",
-    "latency_seconds": 20.61
+    "latency_seconds": 26.51
   },
   {
     "claim_id": "claim-007",
@@ -999,12 +955,12 @@ const FNOL_TRACES = [
       "time_of_loss": "9pm",
       "loss_type": "auto_comprehensive",
       "location": "Route 22 north of town",
-      "description": "Policyholder hit a deer on Route 22, causing front-end damage with airbag deployment and suspected frame damage. Vehicle was towed to a shop.",
+      "description": "Policyholder hit a deer on Route 22, causing severe front-end damage with deployed airbags and possible frame damage. Vehicle was towed to a shop.",
       "estimated_damage_usd": 42000.0
     },
     "decision": "flag for adjuster review",
-    "confidence": 0.95,
-    "reasoning_summary": "The policy is active and comprehensive coverage responds to this deer strike with a $75,000 limit and $250 deductible. No exclusions apply. However, the estimated damage of $42,000 is high and represents more than half of the coverage limit, suggesting this may be a total loss scenario. Given the severity (frame damage, deployed airbags) and high repair estimate, an adjuster should review to assess whether repair or total loss settlement is appropriate.",
+    "confidence": 0.85,
+    "reasoning_summary": "The policy is active, comprehensive coverage responds with a $75,000 limit and $250 deductible, and no exclusions apply to this deer strike. However, the estimated damage of $42,000 is very high for this type of loss and represents 56% of the coverage limit. The severity described (frame damage, deployed airbags, \"completely caved in\" front end) is consistent with a potential total loss. Given the high dollar amount and severity, an adjuster should review the shop's estimate and inspect the vehicle before intake approval.",
     "evidence": [
       {
         "source": "policy:POL-11689",
@@ -1024,16 +980,23 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "HIGH_VALUE",
-        "message": "Estimated damage of $42,000 is high and represents 56% of the $75,000 comprehensive coverage limit. Likely total loss scenario.",
+        "code": "HIGH_ESTIMATED_DAMAGE",
+        "message": "Estimated damage of $42,000 is very high and represents 56% of the $75,000 comprehensive coverage limit. Shop mentions possible frame damage and total loss scenario.",
         "severity": "warning"
       },
       {
-        "code": "SEVERE_DAMAGE",
-        "message": "Airbag deployment and suspected frame damage reported. Requires inspection to determine total loss vs. repair.",
+        "code": "NO_SUPPORTING_DOCUMENTATION",
+        "message": "No repair estimate, photos, or shop invoice attached to support the $42,000 damage estimate.",
         "severity": "warning"
+      },
+      {
+        "code": "POTENTIAL_TOTAL_LOSS",
+        "message": "Description indicates severe damage (frame damage, deployed airbags, completely caved in front end) that may result in total loss determination.",
+        "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1042,10 +1005,10 @@ const FNOL_TRACES = [
           "policy_number": "POL-11689",
           "date_of_loss": "2026-07-10",
           "time_of_loss": "9pm",
-          "loss_type": "auto_comprehensive",
           "location": "Route 22 north of town",
-          "description": "Policyholder hit a deer on Route 22, causing front-end damage with airbag deployment and suspected frame damage. Vehicle was towed to a shop.",
-          "estimated_damage_usd": 42000
+          "loss_type": "auto_comprehensive",
+          "estimated_damage_usd": 42000,
+          "description": "Policyholder hit a deer on Route 22, causing severe front-end damage with deployed airbags and possible frame damage. Vehicle was towed to a shop."
         },
         "tool_result": {
           "recorded": true
@@ -1135,8 +1098,8 @@ const FNOL_TRACES = [
         "tool_name": "submit_decision",
         "tool_input": {
           "decision": "flag for adjuster review",
-          "confidence": 0.95,
-          "reasoning_summary": "The policy is active and comprehensive coverage responds to this deer strike with a $75,000 limit and $250 deductible. No exclusions apply. However, the estimated damage of $42,000 is high and represents more than half of the coverage limit, suggesting this may be a total loss scenario. Given the severity (frame damage, deployed airbags) and high repair estimate, an adjuster should review to assess whether repair or total loss settlement is appropriate.",
+          "confidence": 0.85,
+          "reasoning_summary": "The policy is active, comprehensive coverage responds with a $75,000 limit and $250 deductible, and no exclusions apply to this deer strike. However, the estimated damage of $42,000 is very high for this type of loss and represents 56% of the coverage limit. The severity described (frame damage, deployed airbags, \"completely caved in\" front end) is consistent with a potential total loss. Given the high dollar amount and severity, an adjuster should review the shop's estimate and inspect the vehicle before intake approval.",
           "evidence": [
             {
               "source": "policy:POL-11689",
@@ -1156,14 +1119,19 @@ const FNOL_TRACES = [
           ],
           "flags": [
             {
-              "code": "HIGH_VALUE",
-              "message": "Estimated damage of $42,000 is high and represents 56% of the $75,000 comprehensive coverage limit. Likely total loss scenario.",
+              "code": "HIGH_ESTIMATED_DAMAGE",
+              "message": "Estimated damage of $42,000 is very high and represents 56% of the $75,000 comprehensive coverage limit. Shop mentions possible frame damage and total loss scenario.",
               "severity": "warning"
             },
             {
-              "code": "SEVERE_DAMAGE",
-              "message": "Airbag deployment and suspected frame damage reported. Requires inspection to determine total loss vs. repair.",
+              "code": "NO_SUPPORTING_DOCUMENTATION",
+              "message": "No repair estimate, photos, or shop invoice attached to support the $42,000 damage estimate.",
               "severity": "warning"
+            },
+            {
+              "code": "POTENTIAL_TOTAL_LOSS",
+              "message": "Description indicates severe damage (frame damage, deployed airbags, completely caved in front end) that may result in total loss determination.",
+              "severity": "info"
             }
           ]
         },
@@ -1175,7 +1143,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "high damage estimate on auto, active + covered -> expect flag",
-    "latency_seconds": 17.29
+    "latency_seconds": 19.01
   },
   {
     "claim_id": "claim-008",
@@ -1186,13 +1154,13 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-05",
       "time_of_loss": null,
       "loss_type": "theft",
-      "location": "downtown office parking",
-      "description": "Car broken into while parked outside office; stereo and golf clubs stolen from back seat, window smashed.",
+      "location": "downtown, outside office",
+      "description": "Car was broken into while parked outside policyholder's office downtown. Stereo and golf clubs were stolen from the back seat, and the window was smashed.",
       "estimated_damage_usd": 2100.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "Policy POL-11367 was active on the date of loss (2026-07-05). However, the loss is a theft from vehicle, and the policy only carries collision and liability coverage - no comprehensive coverage that would respond to theft. The claim must be reviewed by an adjuster to confirm the lack of coverage and potentially deny the claim or explain coverage limitations to the policyholder.",
+    "reasoning_summary": "The policy POL-11367 was active on the loss date (2026-07-05), and all required fields were extracted clearly. However, the policy only carries collision and liability coverage. This theft loss (vehicle break-in with stolen items and smashed window) requires comprehensive coverage, which is not present on the policy. The claim must be flagged for adjuster review due to lack of applicable coverage.",
     "evidence": [
       {
         "source": "policy:POL-11367.status",
@@ -1208,10 +1176,12 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "NO_COVERAGE",
-        "message": "No coverage on policy POL-11367 responds to theft. Policy has collision and liability only; comprehensive coverage (which covers theft) is not present.",
+        "message": "Policy lacks comprehensive coverage required for theft loss. Only collision and liability coverages are present.",
         "severity": "critical"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1221,43 +1191,12 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-07-05",
           "time_of_loss": null,
           "loss_type": "theft",
-          "location": "downtown office parking",
-          "description": "Car broken into while parked outside office; stereo and golf clubs stolen from back seat, window smashed.",
+          "location": "downtown, outside office",
+          "description": "Car was broken into while parked outside policyholder's office downtown. Stereo and golf clubs were stolen from the back seat, and the window was smashed.",
           "estimated_damage_usd": 2100
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11367"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11367",
-          "policyholder_name": "Angela Brooks",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2026-02-01",
-          "expiration_date": "2027-02-01",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 25000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 50000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11367",
-            "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-          }
         }
       },
       {
@@ -1306,7 +1245,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "Policy POL-11367 was active on the date of loss (2026-07-05). However, the loss is a theft from vehicle, and the policy only carries collision and liability coverage - no comprehensive coverage that would respond to theft. The claim must be reviewed by an adjuster to confirm the lack of coverage and potentially deny the claim or explain coverage limitations to the policyholder.",
+          "reasoning_summary": "The policy POL-11367 was active on the loss date (2026-07-05), and all required fields were extracted clearly. However, the policy only carries collision and liability coverage. This theft loss (vehicle break-in with stolen items and smashed window) requires comprehensive coverage, which is not present on the policy. The claim must be flagged for adjuster review due to lack of applicable coverage.",
           "evidence": [
             {
               "source": "policy:POL-11367.status",
@@ -1322,7 +1261,7 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "NO_COVERAGE",
-              "message": "No coverage on policy POL-11367 responds to theft. Policy has collision and liability only; comprehensive coverage (which covers theft) is not present.",
+              "message": "Policy lacks comprehensive coverage required for theft loss. Only collision and liability coverages are present.",
               "severity": "critical"
             }
           ]
@@ -1335,7 +1274,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "theft claim on a policy without comprehensive -> not covered -> expect flag",
-    "latency_seconds": 13.42
+    "latency_seconds": 15.27
   },
   {
     "claim_id": "claim-009",
@@ -1347,12 +1286,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "theft",
       "location": null,
-      "description": "Policyholder returned from ten-week international trip to find back door forced open and items stolen including TV, laptop, and jewelry. House was vacant for approximately ten weeks.",
+      "description": "Policyholder returned from 10-week trip abroad to find back door forced open and multiple items stolen including TV, laptop, and jewelry.",
       "estimated_damage_usd": 9000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy was active on the loss date and theft coverage responds with a $200,000 limit. However, the policyholder states the house was vacant for approximately ten weeks (70 days) while they were out of the country, and a vacancy exclusion applies to losses occurring when the dwelling has been vacant for more than 60 consecutive days. This exclusion directly matches the circumstances described and would likely bar coverage for this theft claim.",
+    "reasoning_summary": "The policy was active on the loss date and personal property coverage responds to theft with a $200,000 limit and $1,500 deductible. However, the policyholder explicitly states the house was vacant for approximately 10 weeks (70 days) while they were out of the country, and a vacancy exclusion applies to losses occurring after more than 60 consecutive days of vacancy. This exclusion may bar coverage entirely and requires adjuster review to determine the exact vacancy period and whether the exclusion applies.",
     "evidence": [
       {
         "source": "policy:POL-11220.status",
@@ -1373,15 +1312,17 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Vacancy exclusion (EXCL-VACANCY) applies: dwelling vacant for more than 60 days. Policyholder states house was empty for ~10 weeks (70 days).",
+        "message": "Vacancy exclusion (EXCL-VACANCY) applies: dwelling vacant >60 days. Policyholder states property was empty for ~10 weeks (70 days).",
         "severity": "critical"
       },
       {
-        "code": "MISSING_LOCATION",
-        "message": "Specific property location not stated in submission.",
-        "severity": "info"
+        "code": "MISSING_EVIDENCE",
+        "message": "No supporting documentation (police report, receipts, photos of forced entry) provided for $9,000 theft claim.",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1390,49 +1331,13 @@ const FNOL_TRACES = [
           "policy_number": "POL-11220",
           "date_of_loss": "2026-07-08",
           "time_of_loss": null,
-          "loss_type": "theft",
           "location": null,
+          "loss_type": "theft",
           "estimated_damage_usd": 9000,
-          "description": "Policyholder returned from ten-week international trip to find back door forced open and items stolen including TV, laptop, and jewelry. House was vacant for approximately ten weeks."
+          "description": "Policyholder returned from 10-week trip abroad to find back door forced open and multiple items stolen including TV, laptop, and jewelry."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11220"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11220",
-          "policyholder_name": "David Kim",
-          "policy_type": "homeowners",
-          "status": "active",
-          "effective_date": "2025-09-01",
-          "expiration_date": "2026-09-01",
-          "coverages": [
-            {
-              "coverage_type": "dwelling",
-              "limit": 400000,
-              "deductible": 1500
-            },
-            {
-              "coverage_type": "personal_property",
-              "limit": 200000,
-              "deductible": 1500
-            },
-            {
-              "coverage_type": "theft",
-              "limit": 200000,
-              "deductible": 1500
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11220",
-            "text": "David Kim's homeowners policy POL-11220, status=active, effective 2025-09-01 to 2026-09-01."
-          }
         }
       },
       {
@@ -1494,7 +1399,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy was active on the loss date and theft coverage responds with a $200,000 limit. However, the policyholder states the house was vacant for approximately ten weeks (70 days) while they were out of the country, and a vacancy exclusion applies to losses occurring when the dwelling has been vacant for more than 60 consecutive days. This exclusion directly matches the circumstances described and would likely bar coverage for this theft claim.",
+          "reasoning_summary": "The policy was active on the loss date and personal property coverage responds to theft with a $200,000 limit and $1,500 deductible. However, the policyholder explicitly states the house was vacant for approximately 10 weeks (70 days) while they were out of the country, and a vacancy exclusion applies to losses occurring after more than 60 consecutive days of vacancy. This exclusion may bar coverage entirely and requires adjuster review to determine the exact vacancy period and whether the exclusion applies.",
           "evidence": [
             {
               "source": "policy:POL-11220.status",
@@ -1503,25 +1408,25 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-11220.coverages[1]",
-              "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses.",
-              "rule_id": "COV-2"
+              "rule_id": "COV-2",
+              "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses."
             },
             {
               "source": "policy:POL-11220.exclusions[0]",
-              "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded.",
-              "rule_id": "EXCL-VACANCY"
+              "rule_id": "EXCL-VACANCY",
+              "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded."
             }
           ],
           "flags": [
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Vacancy exclusion (EXCL-VACANCY) applies: dwelling vacant for more than 60 days. Policyholder states house was empty for ~10 weeks (70 days).",
+              "message": "Vacancy exclusion (EXCL-VACANCY) applies: dwelling vacant >60 days. Policyholder states property was empty for ~10 weeks (70 days).",
               "severity": "critical"
             },
             {
-              "code": "MISSING_LOCATION",
-              "message": "Specific property location not stated in submission.",
-              "severity": "info"
+              "code": "MISSING_EVIDENCE",
+              "message": "No supporting documentation (police report, receipts, photos of forced entry) provided for $9,000 theft claim.",
+              "severity": "warning"
             }
           ]
         },
@@ -1533,7 +1438,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "theft on a home that had been vacant 60+ days -> matches vacancy exclusion",
-    "latency_seconds": 18.94
+    "latency_seconds": 16.0
   },
   {
     "claim_id": "claim-010",
@@ -1550,13 +1455,8 @@ const FNOL_TRACES = [
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy is active and collision coverage applies to auto collision losses. However, the policyholder explicitly stated they were driving for a rideshare app with a passenger in the car at the time of the accident. The policy contains a commercial use exclusion that specifically excludes ridesharing activities, which appears to apply to this loss. An adjuster must review whether this exclusion bars coverage.",
+    "reasoning_summary": "The policy was active on the date of loss and collision coverage normally responds to this type of accident. However, the policyholder explicitly stated they were driving for a rideshare app with a passenger at the time of the collision. Policy POL-11367 contains an exclusion for ridesharing and other commercial use of the vehicle, which directly applies to this loss. An adjuster must review whether this exclusion applies and whether the claim should be denied or if the rideshare company's coverage is primary.",
     "evidence": [
-      {
-        "source": "policy:POL-11367",
-        "rule_id": null,
-        "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-      },
       {
         "source": "policy:POL-11367.status",
         "rule_id": null,
@@ -1576,15 +1476,17 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) applies: policyholder was driving for rideshare app with passenger at time of loss",
+        "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) applies: policyholder was driving for rideshare with passenger at time of loss.",
         "severity": "critical"
       },
       {
-        "code": "RIDESHARE_ACTIVITY",
-        "message": "Policyholder states they were actively driving for a rideshare app with a passenger during the collision",
-        "severity": "critical"
+        "code": "COMMERCIAL_ACTIVITY",
+        "message": "Policyholder disclosed rideshare driving with passenger present during collision; rideshare company's coverage may be primary.",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1593,44 +1495,13 @@ const FNOL_TRACES = [
           "policy_number": "POL-11367",
           "date_of_loss": "2026-07-12",
           "time_of_loss": null,
-          "loss_type": "auto_collision",
           "location": "Elm Street",
+          "loss_type": "auto_collision",
           "estimated_damage_usd": 2600,
           "description": "Policyholder rear-ended another vehicle while driving for a rideshare app with a passenger in the car. Front bumper and headlight damaged."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11367"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11367",
-          "policyholder_name": "Angela Brooks",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2026-02-01",
-          "expiration_date": "2027-02-01",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 25000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 50000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11367",
-            "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-          }
         }
       },
       {
@@ -1692,15 +1563,12 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy is active and collision coverage applies to auto collision losses. However, the policyholder explicitly stated they were driving for a rideshare app with a passenger in the car at the time of the accident. The policy contains a commercial use exclusion that specifically excludes ridesharing activities, which appears to apply to this loss. An adjuster must review whether this exclusion bars coverage.",
+          "reasoning_summary": "The policy was active on the date of loss and collision coverage normally responds to this type of accident. However, the policyholder explicitly stated they were driving for a rideshare app with a passenger at the time of the collision. Policy POL-11367 contains an exclusion for ridesharing and other commercial use of the vehicle, which directly applies to this loss. An adjuster must review whether this exclusion applies and whether the claim should be denied or if the rideshare company's coverage is primary.",
           "evidence": [
             {
-              "source": "policy:POL-11367",
-              "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-            },
-            {
               "source": "policy:POL-11367.status",
-              "text": "Policy status is 'active'; term 2026-02-01 to 2027-02-01."
+              "text": "Policy status is 'active'; term 2026-02-01 to 2027-02-01.",
+              "rule_id": null
             },
             {
               "source": "policy:POL-11367.coverages[0]",
@@ -1716,13 +1584,13 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) applies: policyholder was driving for rideshare app with passenger at time of loss",
+              "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) applies: policyholder was driving for rideshare with passenger at time of loss.",
               "severity": "critical"
             },
             {
-              "code": "RIDESHARE_ACTIVITY",
-              "message": "Policyholder states they were actively driving for a rideshare app with a passenger during the collision",
-              "severity": "critical"
+              "code": "COMMERCIAL_ACTIVITY",
+              "message": "Policyholder disclosed rideshare driving with passenger present during collision; rideshare company's coverage may be primary.",
+              "severity": "warning"
             }
           ]
         },
@@ -1734,7 +1602,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "commercial/rideshare use exclusion -> expect flag",
-    "latency_seconds": 16.0
+    "latency_seconds": 15.6
   },
   {
     "claim_id": "claim-011",
@@ -1745,13 +1613,13 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-16",
       "time_of_loss": null,
       "loss_type": "auto_collision",
-      "location": null,
-      "description": "Policyholder's nephew, who is not listed on the policy, borrowed the insured vehicle and backed into a parking garage pillar, causing damage to the rear bumper and taillight.",
+      "location": "parking garage",
+      "description": "Nephew borrowed policyholder's car and backed into a parking garage pillar, damaging the rear bumper and taillight.",
       "estimated_damage_usd": 3000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy is active and collision coverage responds to this loss type with a $75,000 limit and $250 deductible. However, an exclusion applies: the vehicle was being operated by the policyholder's nephew, who is not listed on the policy. The unlisted driver exclusion (EXCL-UNLISTED-DRIVER) matches this scenario. An adjuster must review whether any permissive use provisions or exceptions to the unlisted driver exclusion apply before coverage can be determined.",
+    "reasoning_summary": "The policy was active on the date of loss and collision coverage responds with a $75,000 limit and $250 deductible. However, the policyholder explicitly states that her nephew was driving the vehicle and that \"he's not on the policy.\" This triggers an unlisted driver exclusion (EXCL-UNLISTED-DRIVER) that excludes losses occurring while the vehicle is operated by a driver not listed on the policy. An adjuster must review whether this exclusion applies or if any permissive use provisions override it.",
     "evidence": [
       {
         "source": "policy:POL-11689.status",
@@ -1771,16 +1639,18 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "EXCLUSION_MATCH",
-        "message": "Unlisted driver exclusion (EXCL-UNLISTED-DRIVER) applies - vehicle was operated by nephew not listed on policy",
+        "code": "UNLISTED_DRIVER_EXCLUSION",
+        "message": "Policyholder states nephew was driving and is not on the policy; unlisted driver exclusion EXCL-UNLISTED-DRIVER may apply.",
         "severity": "critical"
       },
       {
-        "code": "PERMISSIVE_USE_REVIEW",
-        "message": "Adjuster should verify if permissive use provisions or exceptions to unlisted driver exclusion apply",
+        "code": "MISSING_ATTACHMENTS",
+        "message": "Estimated damage is $3,000 but no repair estimate, invoice, or damage photos were attached.",
         "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1790,48 +1660,12 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-07-16",
           "time_of_loss": null,
           "loss_type": "auto_collision",
-          "location": null,
+          "location": "parking garage",
           "estimated_damage_usd": 3000,
-          "description": "Policyholder's nephew, who is not listed on the policy, borrowed the insured vehicle and backed into a parking garage pillar, causing damage to the rear bumper and taillight."
+          "description": "Nephew borrowed policyholder's car and backed into a parking garage pillar, damaging the rear bumper and taillight."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11689"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11689",
-          "policyholder_name": "Sofia Marchetti",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2025-08-20",
-          "expiration_date": "2026-08-20",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 75000,
-              "deductible": 250
-            },
-            {
-              "coverage_type": "comprehensive",
-              "limit": 75000,
-              "deductible": 250
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 250000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11689",
-            "text": "Sofia Marchetti's auto policy POL-11689, status=active, effective 2025-08-20 to 2026-08-20."
-          }
         }
       },
       {
@@ -1893,7 +1727,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy is active and collision coverage responds to this loss type with a $75,000 limit and $250 deductible. However, an exclusion applies: the vehicle was being operated by the policyholder's nephew, who is not listed on the policy. The unlisted driver exclusion (EXCL-UNLISTED-DRIVER) matches this scenario. An adjuster must review whether any permissive use provisions or exceptions to the unlisted driver exclusion apply before coverage can be determined.",
+          "reasoning_summary": "The policy was active on the date of loss and collision coverage responds with a $75,000 limit and $250 deductible. However, the policyholder explicitly states that her nephew was driving the vehicle and that \"he's not on the policy.\" This triggers an unlisted driver exclusion (EXCL-UNLISTED-DRIVER) that excludes losses occurring while the vehicle is operated by a driver not listed on the policy. An adjuster must review whether this exclusion applies or if any permissive use provisions override it.",
           "evidence": [
             {
               "source": "policy:POL-11689.status",
@@ -1902,24 +1736,24 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-11689.coverages[0]",
-              "text": "collision coverage, limit $75,000, deductible $250, responds to 'auto_collision' losses.",
-              "rule_id": "COV-1"
+              "rule_id": "COV-1",
+              "text": "collision coverage, limit $75,000, deductible $250, responds to 'auto_collision' losses."
             },
             {
               "source": "policy:POL-11689.exclusions[0]",
-              "text": "Loss occurring while the vehicle is operated by a driver not listed on the policy is excluded.",
-              "rule_id": "EXCL-UNLISTED-DRIVER"
+              "rule_id": "EXCL-UNLISTED-DRIVER",
+              "text": "Loss occurring while the vehicle is operated by a driver not listed on the policy is excluded."
             }
           ],
           "flags": [
             {
-              "code": "EXCLUSION_MATCH",
-              "message": "Unlisted driver exclusion (EXCL-UNLISTED-DRIVER) applies - vehicle was operated by nephew not listed on policy",
+              "code": "UNLISTED_DRIVER_EXCLUSION",
+              "message": "Policyholder states nephew was driving and is not on the policy; unlisted driver exclusion EXCL-UNLISTED-DRIVER may apply.",
               "severity": "critical"
             },
             {
-              "code": "PERMISSIVE_USE_REVIEW",
-              "message": "Adjuster should verify if permissive use provisions or exceptions to unlisted driver exclusion apply",
+              "code": "MISSING_ATTACHMENTS",
+              "message": "Estimated damage is $3,000 but no repair estimate, invoice, or damage photos were attached.",
               "severity": "warning"
             }
           ]
@@ -1932,7 +1766,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "unlisted driver exclusion -> expect flag",
-    "latency_seconds": 18.25
+    "latency_seconds": 16.63
   },
   {
     "claim_id": "claim-012",
@@ -1943,19 +1777,14 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-18",
       "time_of_loss": null,
       "loss_type": "auto_collision",
-      "location": "fairgrounds autocross event",
+      "location": "fairgrounds",
       "description": "Policyholder spun out into a tire barrier during a timed autocross run at the fairgrounds, causing front bumper and wheel damage.",
       "estimated_damage_usd": 3500.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy is active and collision coverage responds to the loss type, but an exclusion for organized racing, speed contests, or track events matches this claim. The loss occurred during a timed autocross run at the fairgrounds, which appears to fall under the racing/track event exclusion. This requires adjuster review to determine whether the autocross event meets the policy's definition of an excluded racing or track event.",
+    "reasoning_summary": "The policy was active on the date of loss and collision coverage is available with a $50,000 limit and $500 deductible. However, the loss occurred during an autocross event (organized timed runs at a fairgrounds), which appears to trigger the racing/track event exclusion (EXCL-RACING). An adjuster must review whether this autocross event qualifies as an \"organized racing, speed contest, or track event\" under the policy's exclusion language.",
     "evidence": [
-      {
-        "source": "policy:POL-10234",
-        "rule_id": null,
-        "text": "Maria Alvarez's auto policy POL-10234, status=active, effective 2025-11-01 to 2026-11-01."
-      },
       {
         "source": "policy:POL-10234.status",
         "rule_id": null,
@@ -1975,15 +1804,12 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Racing/track event exclusion (EXCL-RACING) may apply - loss occurred during timed autocross event",
+        "message": "Racing/track event exclusion (EXCL-RACING) may apply - loss occurred during timed autocross run at fairgrounds",
         "severity": "critical"
-      },
-      {
-        "code": "ORGANIZED_MOTORSPORT",
-        "message": "Loss occurred during organized autocross event with timed runs, which may meet policy definition of excluded racing or track event",
-        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -1993,48 +1819,12 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-07-18",
           "time_of_loss": null,
           "loss_type": "auto_collision",
-          "location": "fairgrounds autocross event",
-          "estimated_damage_usd": 3500,
-          "description": "Policyholder spun out into a tire barrier during a timed autocross run at the fairgrounds, causing front bumper and wheel damage."
+          "location": "fairgrounds",
+          "description": "Policyholder spun out into a tire barrier during a timed autocross run at the fairgrounds, causing front bumper and wheel damage.",
+          "estimated_damage_usd": 3500
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-10234"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-10234",
-          "policyholder_name": "Maria Alvarez",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2025-11-01",
-          "expiration_date": "2026-11-01",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 50000,
-              "deductible": 500
-            },
-            {
-              "coverage_type": "comprehensive",
-              "limit": 50000,
-              "deductible": 500
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 100000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-10234",
-            "text": "Maria Alvarez's auto policy POL-10234, status=active, effective 2025-11-01 to 2026-11-01."
-          }
         }
       },
       {
@@ -2096,13 +1886,8 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy is active and collision coverage responds to the loss type, but an exclusion for organized racing, speed contests, or track events matches this claim. The loss occurred during a timed autocross run at the fairgrounds, which appears to fall under the racing/track event exclusion. This requires adjuster review to determine whether the autocross event meets the policy's definition of an excluded racing or track event.",
+          "reasoning_summary": "The policy was active on the date of loss and collision coverage is available with a $50,000 limit and $500 deductible. However, the loss occurred during an autocross event (organized timed runs at a fairgrounds), which appears to trigger the racing/track event exclusion (EXCL-RACING). An adjuster must review whether this autocross event qualifies as an \"organized racing, speed contest, or track event\" under the policy's exclusion language.",
           "evidence": [
-            {
-              "source": "policy:POL-10234",
-              "text": "Maria Alvarez's auto policy POL-10234, status=active, effective 2025-11-01 to 2026-11-01.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-10234.status",
               "text": "Policy status is 'active'; term 2025-11-01 to 2026-11-01.",
@@ -2110,25 +1895,20 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-10234.coverages[0]",
-              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses.",
-              "rule_id": "COV-1"
+              "rule_id": "COV-1",
+              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses."
             },
             {
               "source": "policy:POL-10234.exclusions[0]",
-              "text": "Damage occurring during organized racing, speed contests, or track events is excluded.",
-              "rule_id": "EXCL-RACING"
+              "rule_id": "EXCL-RACING",
+              "text": "Damage occurring during organized racing, speed contests, or track events is excluded."
             }
           ],
           "flags": [
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Racing/track event exclusion (EXCL-RACING) may apply - loss occurred during timed autocross event",
+              "message": "Racing/track event exclusion (EXCL-RACING) may apply - loss occurred during timed autocross run at fairgrounds",
               "severity": "critical"
-            },
-            {
-              "code": "ORGANIZED_MOTORSPORT",
-              "message": "Loss occurred during organized autocross event with timed runs, which may meet policy definition of excluded racing or track event",
-              "severity": "warning"
             }
           ]
         },
@@ -2140,7 +1920,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "racing exclusion -> expect flag",
-    "latency_seconds": 20.03
+    "latency_seconds": 15.47
   },
   {
     "claim_id": "claim-013",
@@ -2152,18 +1932,13 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "wind_hail",
       "location": null,
-      "description": "Tree branch fell during a storm and damaged the garage roof, creating a hole. Water also entered the garage ceiling.",
+      "description": "A tree branch came down during a storm and damaged the garage roof, creating a hole and causing water to enter the garage ceiling.",
       "estimated_damage_usd": 7200.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, nearly three months before the loss occurred on 2026-07-11. While the dwelling coverage would normally respond to wind/hail damage from a fallen tree branch, and no exclusions apply, the policy was not in force at the time of the loss. This claim requires adjuster review to confirm the cancellation status and determine whether any coverage applies.",
+    "reasoning_summary": "The policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, nearly three months before the loss occurred on 2026-07-11. While the policy would have had dwelling coverage responding to wind/hail damage with a $275,000 limit and $1,000 deductible, and no exclusions apply, the claim cannot proceed because there was no active coverage on the date of loss. An adjuster must review this cancelled policy status.",
     "evidence": [
-      {
-        "source": "policy:POL-11734",
-        "rule_id": null,
-        "text": "Marcus Devereaux's homeowners policy POL-11734, status=cancelled, effective 2025-06-01 to 2026-06-01."
-      },
       {
         "source": "policy:POL-11734.status",
         "rule_id": null,
@@ -2178,15 +1953,17 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "POLICY_CANCELLED",
-        "message": "Policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, before the loss date of 2026-07-11",
+        "message": "Policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, before the loss date of 2026-07-11.",
         "severity": "critical"
       },
       {
-        "code": "COVERAGE_WOULD_APPLY",
-        "message": "If policy had been active, dwelling coverage would respond to this wind/hail loss with $275,000 limit and $1,000 deductible",
+        "code": "MISSING_LOCATION",
+        "message": "No specific property location was provided in the submission.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -2197,42 +1974,11 @@ const FNOL_TRACES = [
           "time_of_loss": null,
           "loss_type": "wind_hail",
           "location": null,
-          "estimated_damage_usd": 7200,
-          "description": "Tree branch fell during a storm and damaged the garage roof, creating a hole. Water also entered the garage ceiling."
+          "description": "A tree branch came down during a storm and damaged the garage roof, creating a hole and causing water to enter the garage ceiling.",
+          "estimated_damage_usd": 7200
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11734"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11734",
-          "policyholder_name": "Marcus Devereaux",
-          "policy_type": "homeowners",
-          "status": "cancelled",
-          "effective_date": "2025-06-01",
-          "expiration_date": "2026-06-01",
-          "coverages": [
-            {
-              "coverage_type": "dwelling",
-              "limit": 275000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "personal_property",
-              "limit": 125000,
-              "deductible": 1000
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11734",
-            "text": "Marcus Devereaux's homeowners policy POL-11734, status=cancelled, effective 2025-06-01 to 2026-06-01."
-          }
         }
       },
       {
@@ -2284,13 +2030,8 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, nearly three months before the loss occurred on 2026-07-11. While the dwelling coverage would normally respond to wind/hail damage from a fallen tree branch, and no exclusions apply, the policy was not in force at the time of the loss. This claim requires adjuster review to confirm the cancellation status and determine whether any coverage applies.",
+          "reasoning_summary": "The policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, nearly three months before the loss occurred on 2026-07-11. While the policy would have had dwelling coverage responding to wind/hail damage with a $275,000 limit and $1,000 deductible, and no exclusions apply, the claim cannot proceed because there was no active coverage on the date of loss. An adjuster must review this cancelled policy status.",
           "evidence": [
-            {
-              "source": "policy:POL-11734",
-              "text": "Marcus Devereaux's homeowners policy POL-11734, status=cancelled, effective 2025-06-01 to 2026-06-01.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11734.status",
               "text": "Policy status is 'cancelled'; term 2025-06-01 to 2026-06-01.",
@@ -2305,12 +2046,12 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "POLICY_CANCELLED",
-              "message": "Policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, before the loss date of 2026-07-11",
+              "message": "Policy POL-11734 was cancelled on 2026-04-15 for nonpayment of premium, before the loss date of 2026-07-11.",
               "severity": "critical"
             },
             {
-              "code": "COVERAGE_WOULD_APPLY",
-              "message": "If policy had been active, dwelling coverage would respond to this wind/hail loss with $275,000 limit and $1,000 deductible",
+              "code": "MISSING_LOCATION",
+              "message": "No specific property location was provided in the submission.",
               "severity": "info"
             }
           ]
@@ -2323,7 +2064,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "cancelled policy -> expect flag",
-    "latency_seconds": 18.79
+    "latency_seconds": 14.58
   },
   {
     "claim_id": "claim-014",
@@ -2335,12 +2076,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "earth_movement",
       "location": null,
-      "description": "A small earthquake cracked the foundation and a load-bearing wall in the basement. Contractor quoted approximately $22,000 for foundation repair.",
+      "description": "A small earthquake cracked the foundation and a load-bearing wall in the basement. Contractor quoted $22,000 for foundation repair.",
       "estimated_damage_usd": 22000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The policy is active on the date of loss (2026-06-30) and dwelling coverage would normally respond to earth_movement losses. However, the policy contains a specific exclusion (EXCL-EARTH-MOVEMENT) that excludes damage caused by earthquake, landslide, or other earth movement. This exclusion directly applies to the earthquake-caused foundation damage described in the claim, making coverage unlikely despite the estimated damage being within reasonable limits ($22,000).",
+    "reasoning_summary": "The policy was active on the loss date (2026-06-30) and dwelling coverage responds to earth movement losses with a $350,000 limit. However, the policy contains a specific exclusion (EXCL-EARTH-MOVEMENT) for earthquake and earth movement damage. This creates a coverage conflict that requires adjuster review to determine whether the exclusion overrides the coverage provision or whether the policyholder may have earthquake endorsement coverage not reflected in the standard exclusions.",
     "evidence": [
       {
         "source": "policy:POL-11502.status",
@@ -2361,15 +2102,27 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Earth movement/earthquake exclusion (EXCL-EARTH-MOVEMENT) applies to this loss. Coverage is likely denied.",
+        "message": "Policy exclusion EXCL-EARTH-MOVEMENT matches this earth_movement loss type - earthquake damage is explicitly excluded.",
         "severity": "critical"
       },
       {
-        "code": "STRUCTURAL_DAMAGE",
-        "message": "Foundation and load-bearing wall damage reported - structural integrity issue requiring expert assessment.",
+        "code": "COVERAGE_CONFLICT",
+        "message": "Coverage responds to earth_movement but exclusion also matches - adjuster must resolve this conflict.",
+        "severity": "critical"
+      },
+      {
+        "code": "HIGH_VALUE",
+        "message": "Estimated damage of $22,000 warrants documentation review.",
+        "severity": "warning"
+      },
+      {
+        "code": "MISSING_EVIDENCE",
+        "message": "No contractor quote or damage photos attached to support the $22,000 estimate.",
         "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -2381,46 +2134,10 @@ const FNOL_TRACES = [
           "loss_type": "earth_movement",
           "location": null,
           "estimated_damage_usd": 22000,
-          "description": "A small earthquake cracked the foundation and a load-bearing wall in the basement. Contractor quoted approximately $22,000 for foundation repair."
+          "description": "A small earthquake cracked the foundation and a load-bearing wall in the basement. Contractor quoted $22,000 for foundation repair."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11502"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11502",
-          "policyholder_name": "Robert Chen",
-          "policy_type": "homeowners",
-          "status": "active",
-          "effective_date": "2025-12-01",
-          "expiration_date": "2026-12-01",
-          "coverages": [
-            {
-              "coverage_type": "dwelling",
-              "limit": 350000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "personal_property",
-              "limit": 175000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "water_damage_sudden",
-              "limit": 75000,
-              "deductible": 1000
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11502",
-            "text": "Robert Chen's homeowners policy POL-11502, status=active, effective 2025-12-01 to 2026-12-01."
-          }
         }
       },
       {
@@ -2482,7 +2199,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The policy is active on the date of loss (2026-06-30) and dwelling coverage would normally respond to earth_movement losses. However, the policy contains a specific exclusion (EXCL-EARTH-MOVEMENT) that excludes damage caused by earthquake, landslide, or other earth movement. This exclusion directly applies to the earthquake-caused foundation damage described in the claim, making coverage unlikely despite the estimated damage being within reasonable limits ($22,000).",
+          "reasoning_summary": "The policy was active on the loss date (2026-06-30) and dwelling coverage responds to earth movement losses with a $350,000 limit. However, the policy contains a specific exclusion (EXCL-EARTH-MOVEMENT) for earthquake and earth movement damage. This creates a coverage conflict that requires adjuster review to determine whether the exclusion overrides the coverage provision or whether the policyholder may have earthquake endorsement coverage not reflected in the standard exclusions.",
           "evidence": [
             {
               "source": "policy:POL-11502.status",
@@ -2491,24 +2208,34 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-11502.coverages[0]",
-              "text": "dwelling coverage, limit $350,000, deductible $1,000, responds to 'earth_movement' losses.",
-              "rule_id": "COV-1"
+              "rule_id": "COV-1",
+              "text": "dwelling coverage, limit $350,000, deductible $1,000, responds to 'earth_movement' losses."
             },
             {
               "source": "policy:POL-11502.exclusions[0]",
-              "text": "Damage caused by earthquake, landslide, or other earth movement is excluded.",
-              "rule_id": "EXCL-EARTH-MOVEMENT"
+              "rule_id": "EXCL-EARTH-MOVEMENT",
+              "text": "Damage caused by earthquake, landslide, or other earth movement is excluded."
             }
           ],
           "flags": [
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Earth movement/earthquake exclusion (EXCL-EARTH-MOVEMENT) applies to this loss. Coverage is likely denied.",
+              "message": "Policy exclusion EXCL-EARTH-MOVEMENT matches this earth_movement loss type - earthquake damage is explicitly excluded.",
               "severity": "critical"
             },
             {
-              "code": "STRUCTURAL_DAMAGE",
-              "message": "Foundation and load-bearing wall damage reported - structural integrity issue requiring expert assessment.",
+              "code": "COVERAGE_CONFLICT",
+              "message": "Coverage responds to earth_movement but exclusion also matches - adjuster must resolve this conflict.",
+              "severity": "critical"
+            },
+            {
+              "code": "HIGH_VALUE",
+              "message": "Estimated damage of $22,000 warrants documentation review.",
+              "severity": "warning"
+            },
+            {
+              "code": "MISSING_EVIDENCE",
+              "message": "No contractor quote or damage photos attached to support the $22,000 estimate.",
               "severity": "warning"
             }
           ]
@@ -2521,7 +2248,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "earth movement exclusion -> expect flag",
-    "latency_seconds": 16.09
+    "latency_seconds": 17.52
   },
   {
     "claim_id": "claim-015",
@@ -2533,12 +2260,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "auto_collision",
       "location": null,
-      "description": "Policyholder's parked car was sideswiped by another vehicle that fled the scene, causing a long scrape and dented driver's side doors.",
+      "description": "Policyholder's parked car was sideswiped by an unknown driver who left the scene, causing a long scrape and dents to the driver's side doors.",
       "estimated_damage_usd": null
     },
     "decision": "request more info",
     "confidence": 0.85,
-    "reasoning_summary": "The claim describes a hit-and-run collision to a parked vehicle, and collision coverage is available on the active policy POL-10234. However, the submission does not include a date of loss, which is required to verify the policy was in force at the time of the incident and to properly process the claim. The policyholder should be contacted to obtain the date the damage occurred before intake can be completed.",
+    "reasoning_summary": "Maria Alvarez reports her parked car was sideswiped by an unknown driver. Policy POL-10234 is active and has collision coverage that responds to this loss type. However, the submission is missing the date of loss, which is required to verify the policy was in force at the time of the incident. Additionally, no specific damage estimate was provided beyond \"probably a couple thousand dollars,\" and no photos or repair estimates were attached to support the claim.",
     "evidence": [
       {
         "source": "policy:POL-10234",
@@ -2554,20 +2281,22 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "MISSING_DATE_OF_LOSS",
-        "message": "No date of loss provided - required to verify policy was in force at time of incident",
+        "message": "No date of loss provided; required to verify policy was in force at time of incident.",
         "severity": "critical"
       },
       {
-        "code": "HIT_AND_RUN",
-        "message": "Hit-and-run claim - may require police report for processing",
-        "severity": "info"
+        "code": "MISSING_DAMAGE_ESTIMATE",
+        "message": "No specific damage estimate provided; claimant states 'probably a couple thousand dollars' but hasn't had vehicle assessed yet.",
+        "severity": "warning"
       },
       {
-        "code": "DAMAGE_ESTIMATE_INFORMAL",
-        "message": "Damage amount described as 'a couple thousand dollars' - formal estimate needed",
-        "severity": "info"
+        "code": "NO_SUPPORTING_DOCUMENTATION",
+        "message": "No damage photos or repair estimates attached to support the claim.",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -2579,7 +2308,7 @@ const FNOL_TRACES = [
           "loss_type": "auto_collision",
           "location": null,
           "estimated_damage_usd": null,
-          "description": "Policyholder's parked car was sideswiped by another vehicle that fled the scene, causing a long scrape and dented driver's side doors."
+          "description": "Policyholder's parked car was sideswiped by an unknown driver who left the scene, causing a long scrape and dents to the driver's side doors."
         },
         "tool_result": {
           "recorded": true
@@ -2665,7 +2394,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "request more info",
           "confidence": 0.85,
-          "reasoning_summary": "The claim describes a hit-and-run collision to a parked vehicle, and collision coverage is available on the active policy POL-10234. However, the submission does not include a date of loss, which is required to verify the policy was in force at the time of the incident and to properly process the claim. The policyholder should be contacted to obtain the date the damage occurred before intake can be completed.",
+          "reasoning_summary": "Maria Alvarez reports her parked car was sideswiped by an unknown driver. Policy POL-10234 is active and has collision coverage that responds to this loss type. However, the submission is missing the date of loss, which is required to verify the policy was in force at the time of the incident. Additionally, no specific damage estimate was provided beyond \"probably a couple thousand dollars,\" and no photos or repair estimates were attached to support the claim.",
           "evidence": [
             {
               "source": "policy:POL-10234",
@@ -2674,25 +2403,25 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-10234.coverages[0]",
-              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses.",
-              "rule_id": "COV-1"
+              "rule_id": "COV-1",
+              "text": "collision coverage, limit $50,000, deductible $500, responds to 'auto_collision' losses."
             }
           ],
           "flags": [
             {
               "code": "MISSING_DATE_OF_LOSS",
-              "message": "No date of loss provided - required to verify policy was in force at time of incident",
+              "message": "No date of loss provided; required to verify policy was in force at time of incident.",
               "severity": "critical"
             },
             {
-              "code": "HIT_AND_RUN",
-              "message": "Hit-and-run claim - may require police report for processing",
-              "severity": "info"
+              "code": "MISSING_DAMAGE_ESTIMATE",
+              "message": "No specific damage estimate provided; claimant states 'probably a couple thousand dollars' but hasn't had vehicle assessed yet.",
+              "severity": "warning"
             },
             {
-              "code": "DAMAGE_ESTIMATE_INFORMAL",
-              "message": "Damage amount described as 'a couple thousand dollars' - formal estimate needed",
-              "severity": "info"
+              "code": "NO_SUPPORTING_DOCUMENTATION",
+              "message": "No damage photos or repair estimates attached to support the claim.",
+              "severity": "warning"
             }
           ]
         },
@@ -2704,7 +2433,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "no date of loss stated -> expect request more info",
-    "latency_seconds": 18.35
+    "latency_seconds": 18.84
   },
   {
     "claim_id": "claim-016",
@@ -2716,12 +2445,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": null,
       "location": null,
-      "description": "Policyholder reports something happened to their car that requires repair, but no specific details about the nature of the damage or incident were provided.",
+      "description": "The policyholder reports something happened to their car that requires repair, but has not provided specific details about the incident.",
       "estimated_damage_usd": null
     },
     "decision": "request more info",
     "confidence": 0.95,
-    "reasoning_summary": "The submission lacks critical information needed for intake processing. No date of loss was provided, making it impossible to verify policy status at the time of the incident. No description of what happened to the vehicle was given, so the loss type cannot be classified. The policyholder explicitly requests a callback to discuss details, indicating they have not yet provided the necessary claim information.",
+    "reasoning_summary": "The submission provides a policy number (POL-11045) but lacks essential information needed to triage the claim. No date of loss, no description of what actually happened to the vehicle, and no loss type can be determined from \"something happened to my car.\" Without a date of loss, we cannot verify policy status at the time of the incident (the policy is currently lapsed). The policyholder is requesting a callback to provide details rather than submitting a complete FNOL.",
     "evidence": [
       {
         "source": "policy:POL-11045",
@@ -2732,25 +2461,27 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "MISSING_DATE_OF_LOSS",
-        "message": "No date of loss provided; cannot verify policy was in force at time of incident",
+        "message": "No date of loss provided; cannot verify policy was active when incident occurred.",
         "severity": "critical"
       },
       {
-        "code": "MISSING_LOSS_DETAILS",
-        "message": "No description of the incident or type of damage provided",
+        "code": "MISSING_LOSS_DESCRIPTION",
+        "message": "No details provided about what happened to the vehicle; cannot classify loss type or assess coverage.",
         "severity": "critical"
       },
       {
-        "code": "POLICY_STATUS_LAPSED",
-        "message": "Policy POL-11045 shows status=lapsed; coverage depends on when loss occurred",
+        "code": "POLICY_LAPSED",
+        "message": "Policy POL-11045 shows status=lapsed; must confirm incident date to determine if coverage was in force.",
         "severity": "warning"
       },
       {
-        "code": "CALLBACK_REQUESTED",
-        "message": "Policyholder explicitly requested callback to provide claim details",
+        "code": "INCOMPLETE_SUBMISSION",
+        "message": "Policyholder requests callback instead of providing claim details in submission.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -2761,8 +2492,8 @@ const FNOL_TRACES = [
           "time_of_loss": null,
           "loss_type": null,
           "location": null,
-          "description": "Policyholder reports something happened to their car that requires repair, but no specific details about the nature of the damage or incident were provided.",
-          "estimated_damage_usd": null
+          "estimated_damage_usd": null,
+          "description": "The policyholder reports something happened to their car that requires repair, but has not provided specific details about the incident."
         },
         "tool_result": {
           "recorded": true
@@ -2809,7 +2540,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "request more info",
           "confidence": 0.95,
-          "reasoning_summary": "The submission lacks critical information needed for intake processing. No date of loss was provided, making it impossible to verify policy status at the time of the incident. No description of what happened to the vehicle was given, so the loss type cannot be classified. The policyholder explicitly requests a callback to discuss details, indicating they have not yet provided the necessary claim information.",
+          "reasoning_summary": "The submission provides a policy number (POL-11045) but lacks essential information needed to triage the claim. No date of loss, no description of what actually happened to the vehicle, and no loss type can be determined from \"something happened to my car.\" Without a date of loss, we cannot verify policy status at the time of the incident (the policy is currently lapsed). The policyholder is requesting a callback to provide details rather than submitting a complete FNOL.",
           "evidence": [
             {
               "source": "policy:POL-11045",
@@ -2820,22 +2551,22 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "MISSING_DATE_OF_LOSS",
-              "message": "No date of loss provided; cannot verify policy was in force at time of incident",
+              "message": "No date of loss provided; cannot verify policy was active when incident occurred.",
               "severity": "critical"
             },
             {
-              "code": "MISSING_LOSS_DETAILS",
-              "message": "No description of the incident or type of damage provided",
+              "code": "MISSING_LOSS_DESCRIPTION",
+              "message": "No details provided about what happened to the vehicle; cannot classify loss type or assess coverage.",
               "severity": "critical"
             },
             {
-              "code": "POLICY_STATUS_LAPSED",
-              "message": "Policy POL-11045 shows status=lapsed; coverage depends on when loss occurred",
+              "code": "POLICY_LAPSED",
+              "message": "Policy POL-11045 shows status=lapsed; must confirm incident date to determine if coverage was in force.",
               "severity": "warning"
             },
             {
-              "code": "CALLBACK_REQUESTED",
-              "message": "Policyholder explicitly requested callback to provide claim details",
+              "code": "INCOMPLETE_SUBMISSION",
+              "message": "Policyholder requests callback instead of providing claim details in submission.",
               "severity": "info"
             }
           ]
@@ -2848,7 +2579,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "extremely vague description, no usable loss type -> expect request more info",
-    "latency_seconds": 12.62
+    "latency_seconds": 16.85
   },
   {
     "claim_id": "claim-017",
@@ -2860,18 +2591,13 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "liability",
       "location": "highway",
-      "description": "Policyholder changed lanes on highway and clipped another vehicle, causing damage to the other car's passenger door. No damage to policyholder's own vehicle.",
+      "description": "Policyholder changed lanes on highway and clipped another vehicle, causing damage to the other car's passenger door. Policyholder's own vehicle has no damage.",
       "estimated_damage_usd": 3100.0
     },
-    "decision": "auto-approve intake",
-    "confidence": 0.95,
-    "reasoning_summary": "Angela Brooks's auto policy POL-11367 was active on the loss date (2026-07-09). The claim is a straightforward liability claim for damage caused to another vehicle during a lane change. Liability coverage responds with a $50,000 limit and no deductible, and no exclusions apply. The estimated third-party damage of $3,100 is well within the coverage limit and reasonable for the described incident.",
+    "decision": "flag for adjuster review",
+    "confidence": 0.75,
+    "reasoning_summary": "Policy POL-11367 was active on the loss date and liability coverage responds with a $50,000 limit. The estimated third-party damage of $3,100 is well within coverage limits. However, the submission begins with \"James here - wait, sorry, this is Angela Brooks,\" suggesting possible confusion about the reporting party's identity. This name inconsistency should be verified by an adjuster to ensure the claim is being filed by the correct policyholder.",
     "evidence": [
-      {
-        "source": "policy:POL-11367",
-        "rule_id": null,
-        "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-      },
       {
         "source": "policy:POL-11367.status",
         "rule_id": null,
@@ -2885,11 +2611,18 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "MINOR_CONFUSION",
-        "message": "Submission starts with 'James here' then corrects to Angela Brooks; no impact on claim validity.",
+        "code": "IDENTITY_CONFUSION",
+        "message": "Submission begins 'James here - wait, sorry, this is Angela Brooks' - verify reporting party identity",
+        "severity": "warning"
+      },
+      {
+        "code": "NO_ATTACHMENTS",
+        "message": "Third-party liability claim with $3,100 estimated damage has no supporting invoice or estimate attached",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -2898,44 +2631,13 @@ const FNOL_TRACES = [
           "policy_number": "POL-11367",
           "date_of_loss": "2026-07-09",
           "time_of_loss": null,
-          "loss_type": "liability",
           "location": "highway",
+          "loss_type": "liability",
           "estimated_damage_usd": 3100,
-          "description": "Policyholder changed lanes on highway and clipped another vehicle, causing damage to the other car's passenger door. No damage to policyholder's own vehicle."
+          "description": "Policyholder changed lanes on highway and clipped another vehicle, causing damage to the other car's passenger door. Policyholder's own vehicle has no damage."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11367"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11367",
-          "policyholder_name": "Angela Brooks",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2026-02-01",
-          "expiration_date": "2027-02-01",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 25000,
-              "deductible": 1000
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 50000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11367",
-            "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-          }
         }
       },
       {
@@ -2985,28 +2687,30 @@ const FNOL_TRACES = [
       {
         "tool_name": "submit_decision",
         "tool_input": {
-          "decision": "auto-approve intake",
-          "confidence": 0.95,
-          "reasoning_summary": "Angela Brooks's auto policy POL-11367 was active on the loss date (2026-07-09). The claim is a straightforward liability claim for damage caused to another vehicle during a lane change. Liability coverage responds with a $50,000 limit and no deductible, and no exclusions apply. The estimated third-party damage of $3,100 is well within the coverage limit and reasonable for the described incident.",
+          "decision": "flag for adjuster review",
+          "confidence": 0.75,
+          "reasoning_summary": "Policy POL-11367 was active on the loss date and liability coverage responds with a $50,000 limit. The estimated third-party damage of $3,100 is well within coverage limits. However, the submission begins with \"James here - wait, sorry, this is Angela Brooks,\" suggesting possible confusion about the reporting party's identity. This name inconsistency should be verified by an adjuster to ensure the claim is being filed by the correct policyholder.",
           "evidence": [
             {
-              "source": "policy:POL-11367",
-              "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-            },
-            {
               "source": "policy:POL-11367.status",
-              "text": "Policy status is 'active'; term 2026-02-01 to 2027-02-01."
+              "text": "Policy status is 'active'; term 2026-02-01 to 2027-02-01.",
+              "rule_id": null
             },
             {
               "source": "policy:POL-11367.coverages[1]",
-              "rule_id": "COV-2",
-              "text": "liability coverage, limit $50,000, deductible $0, responds to 'liability' losses."
+              "text": "liability coverage, limit $50,000, deductible $0, responds to 'liability' losses.",
+              "rule_id": "COV-2"
             }
           ],
           "flags": [
             {
-              "code": "MINOR_CONFUSION",
-              "message": "Submission starts with 'James here' then corrects to Angela Brooks; no impact on claim validity.",
+              "code": "IDENTITY_CONFUSION",
+              "message": "Submission begins 'James here - wait, sorry, this is Angela Brooks' - verify reporting party identity",
+              "severity": "warning"
+            },
+            {
+              "code": "NO_ATTACHMENTS",
+              "message": "Third-party liability claim with $3,100 estimated damage has no supporting invoice or estimate attached",
               "severity": "info"
             }
           ]
@@ -3019,7 +2723,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean liability auto claim -> expect auto-approve",
-    "latency_seconds": 15.06
+    "latency_seconds": 17.38
   },
   {
     "claim_id": "claim-018",
@@ -3031,18 +2735,13 @@ const FNOL_TRACES = [
       "time_of_loss": "night",
       "loss_type": "theft",
       "location": "garage",
-      "description": "Someone broke a side window and stole a bike and power tool set from the garage while the policyholder was asleep at night. Police report filed.",
+      "description": "Someone broke a side window and stole a bike and power tool set from the garage while the policyholder was asleep. Police report filed.",
       "estimated_damage_usd": 2400.0
     },
     "decision": "auto-approve intake",
     "confidence": 0.92,
-    "reasoning_summary": "Policy POL-11220 was active on the loss date (2026-07-15). Personal property coverage responds to theft losses with a $200,000 limit and $1,500 deductible. The claimed loss amount of $2,400 is within normal range for stolen items (bike and power tools). Although a vacancy exclusion exists on the policy, the policyholder explicitly stated they were home all week and asleep during the theft, so the dwelling was not vacant and the exclusion does not apply.",
+    "reasoning_summary": "Policy POL-11220 was active on the loss date (2026-07-15). Personal property coverage responds to theft with a $200,000 limit and $1,500 deductible. While a vacancy exclusion exists on the policy, the policyholder explicitly states \"we were home all week,\" indicating the dwelling was occupied, so the exclusion does not apply. The estimated loss of $2,400 is reasonable for a bike and power tool set, and a police report was filed. All necessary information is present for intake.",
     "evidence": [
-      {
-        "source": "policy:POL-11220",
-        "rule_id": null,
-        "text": "David Kim's homeowners policy POL-11220, status=active, effective 2025-09-01 to 2026-09-01."
-      },
       {
         "source": "policy:POL-11220.status",
         "rule_id": null,
@@ -3052,20 +2751,27 @@ const FNOL_TRACES = [
         "source": "policy:POL-11220.coverages[1]",
         "rule_id": "COV-2",
         "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses."
+      },
+      {
+        "source": "policy:POL-11220.exclusions[0]",
+        "rule_id": "EXCL-VACANCY",
+        "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded."
       }
     ],
     "flags": [
       {
-        "code": "EXCLUSION_ON_FILE",
-        "message": "Vacancy exclusion (EXCL-VACANCY) exists on policy but does not apply - policyholder stated they were home during the loss period.",
+        "code": "EXCLUSION_PRESENT_BUT_LIKELY_NOT_APPLICABLE",
+        "message": "Vacancy exclusion exists on policy, but claimant states 'we were home all week' - adjuster should confirm dwelling was occupied at time of loss.",
         "severity": "info"
       },
       {
         "code": "POLICE_REPORT_FILED",
-        "message": "Police report filed (report number on file) - good documentation for theft claim.",
+        "message": "Policyholder states police report on file for theft - adjuster should obtain report number and copy for file.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -3074,49 +2780,13 @@ const FNOL_TRACES = [
           "policy_number": "POL-11220",
           "date_of_loss": "2026-07-15",
           "time_of_loss": "night",
-          "loss_type": "theft",
           "location": "garage",
+          "loss_type": "theft",
           "estimated_damage_usd": 2400,
-          "description": "Someone broke a side window and stole a bike and power tool set from the garage while the policyholder was asleep at night. Police report filed."
+          "description": "Someone broke a side window and stole a bike and power tool set from the garage while the policyholder was asleep. Police report filed."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11220"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11220",
-          "policyholder_name": "David Kim",
-          "policy_type": "homeowners",
-          "status": "active",
-          "effective_date": "2025-09-01",
-          "expiration_date": "2026-09-01",
-          "coverages": [
-            {
-              "coverage_type": "dwelling",
-              "limit": 400000,
-              "deductible": 1500
-            },
-            {
-              "coverage_type": "personal_property",
-              "limit": 200000,
-              "deductible": 1500
-            },
-            {
-              "coverage_type": "theft",
-              "limit": 200000,
-              "deductible": 1500
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11220",
-            "text": "David Kim's homeowners policy POL-11220, status=active, effective 2025-09-01 to 2026-09-01."
-          }
         }
       },
       {
@@ -3178,13 +2848,8 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "auto-approve intake",
           "confidence": 0.92,
-          "reasoning_summary": "Policy POL-11220 was active on the loss date (2026-07-15). Personal property coverage responds to theft losses with a $200,000 limit and $1,500 deductible. The claimed loss amount of $2,400 is within normal range for stolen items (bike and power tools). Although a vacancy exclusion exists on the policy, the policyholder explicitly stated they were home all week and asleep during the theft, so the dwelling was not vacant and the exclusion does not apply.",
+          "reasoning_summary": "Policy POL-11220 was active on the loss date (2026-07-15). Personal property coverage responds to theft with a $200,000 limit and $1,500 deductible. While a vacancy exclusion exists on the policy, the policyholder explicitly states \"we were home all week,\" indicating the dwelling was occupied, so the exclusion does not apply. The estimated loss of $2,400 is reasonable for a bike and power tool set, and a police report was filed. All necessary information is present for intake.",
           "evidence": [
-            {
-              "source": "policy:POL-11220",
-              "text": "David Kim's homeowners policy POL-11220, status=active, effective 2025-09-01 to 2026-09-01.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11220.status",
               "text": "Policy status is 'active'; term 2025-09-01 to 2026-09-01.",
@@ -3194,17 +2859,22 @@ const FNOL_TRACES = [
               "source": "policy:POL-11220.coverages[1]",
               "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses.",
               "rule_id": "COV-2"
+            },
+            {
+              "source": "policy:POL-11220.exclusions[0]",
+              "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded.",
+              "rule_id": "EXCL-VACANCY"
             }
           ],
           "flags": [
             {
-              "code": "EXCLUSION_ON_FILE",
-              "message": "Vacancy exclusion (EXCL-VACANCY) exists on policy but does not apply - policyholder stated they were home during the loss period.",
+              "code": "EXCLUSION_PRESENT_BUT_LIKELY_NOT_APPLICABLE",
+              "message": "Vacancy exclusion exists on policy, but claimant states 'we were home all week' - adjuster should confirm dwelling was occupied at time of loss.",
               "severity": "info"
             },
             {
               "code": "POLICE_REPORT_FILED",
-              "message": "Police report filed (report number on file) - good documentation for theft claim.",
+              "message": "Policyholder states police report on file for theft - adjuster should obtain report number and copy for file.",
               "severity": "info"
             }
           ]
@@ -3217,7 +2887,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean theft claim, covered, no vacancy issue -> expect auto-approve",
-    "latency_seconds": 18.72
+    "latency_seconds": 17.67
   },
   {
     "claim_id": "claim-019",
@@ -3228,13 +2898,13 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-06",
       "time_of_loss": null,
       "loss_type": "fire",
-      "location": null,
-      "description": "A grease fire in the kitchen damaged the stove, cabinets, and scorched part of the ceiling before being extinguished. Fire department confirmed the cause.",
+      "location": "kitchen",
+      "description": "A grease fire in the kitchen damaged the stove, cabinets, and scorched part of the ceiling. The fire was extinguished with a fire extinguisher and the cause was confirmed by the fire department.",
       "estimated_damage_usd": 14000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "The claim is well-documented with a clear fire loss type, fire department confirmation, and a reasonable estimated damage of $14,000. Dwelling coverage would normally respond to fire losses with a $300,000 limit and $1,000 deductible. However, the policy expired on 2026-06-15 and the loss occurred on 2026-07-06, making the policy inactive at the time of loss. This requires adjuster review to verify whether the policy was renewed or if coverage applies.",
+    "reasoning_summary": "The claim is complete and well-documented: grease fire in the kitchen with fire department confirmation, $14,000 contractor estimate for stove, cabinet, and ceiling damage. Dwelling coverage responds to fire losses with a $300,000 limit and $1,000 deductible, and no exclusions apply. However, the loss occurred on 2026-07-06, which is 21 days after the policy's expiration date of 2026-06-15. The policy was not in force on the date of loss and requires adjuster review to verify whether it was renewed or if coverage exists.",
     "evidence": [
       {
         "source": "policy:POL-10891",
@@ -3254,16 +2924,18 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "POLICY_EXPIRED",
-        "message": "Loss date 2026-07-06 is after policy expiration date 2026-06-15. Policy may not have been in force at time of loss.",
+        "code": "POLICY_EXPIRED_AT_LOSS",
+        "message": "Loss date 2026-07-06 is after policy expiration date 2026-06-15. Policy may have been renewed but system shows term ended before loss.",
         "severity": "critical"
       },
       {
-        "code": "LOCATION_MISSING",
-        "message": "Property location not specified in submission.",
+        "code": "MODERATE_DAMAGE_AMOUNT",
+        "message": "Estimated damage of $14,000 is moderate for a kitchen fire; contractor estimate should be verified during adjudication.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -3273,8 +2945,8 @@ const FNOL_TRACES = [
           "date_of_loss": "2026-07-06",
           "time_of_loss": null,
           "loss_type": "fire",
-          "location": null,
-          "description": "A grease fire in the kitchen damaged the stove, cabinets, and scorched part of the ceiling before being extinguished. Fire department confirmed the cause.",
+          "location": "kitchen",
+          "description": "A grease fire in the kitchen damaged the stove, cabinets, and scorched part of the ceiling. The fire was extinguished with a fire extinguisher and the cause was confirmed by the fire department.",
           "estimated_damage_usd": 14000
         },
         "tool_result": {
@@ -3366,31 +3038,33 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "The claim is well-documented with a clear fire loss type, fire department confirmation, and a reasonable estimated damage of $14,000. Dwelling coverage would normally respond to fire losses with a $300,000 limit and $1,000 deductible. However, the policy expired on 2026-06-15 and the loss occurred on 2026-07-06, making the policy inactive at the time of loss. This requires adjuster review to verify whether the policy was renewed or if coverage applies.",
+          "reasoning_summary": "The claim is complete and well-documented: grease fire in the kitchen with fire department confirmation, $14,000 contractor estimate for stove, cabinet, and ceiling damage. Dwelling coverage responds to fire losses with a $300,000 limit and $1,000 deductible, and no exclusions apply. However, the loss occurred on 2026-07-06, which is 21 days after the policy's expiration date of 2026-06-15. The policy was not in force on the date of loss and requires adjuster review to verify whether it was renewed or if coverage exists.",
           "evidence": [
             {
               "source": "policy:POL-10891",
-              "text": "James Whitfield's homeowners policy POL-10891, status=active, effective 2025-06-15 to 2026-06-15."
+              "text": "James Whitfield's homeowners policy POL-10891, status=active, effective 2025-06-15 to 2026-06-15.",
+              "rule_id": null
             },
             {
               "source": "policy:POL-10891.status",
-              "text": "Policy status is 'active'; term 2025-06-15 to 2026-06-15."
+              "text": "Policy status is 'active'; term 2025-06-15 to 2026-06-15.",
+              "rule_id": null
             },
             {
               "source": "policy:POL-10891.coverages[0]",
-              "rule_id": "COV-1",
-              "text": "dwelling coverage, limit $300,000, deductible $1,000, responds to 'fire' losses."
+              "text": "dwelling coverage, limit $300,000, deductible $1,000, responds to 'fire' losses.",
+              "rule_id": "COV-1"
             }
           ],
           "flags": [
             {
-              "code": "POLICY_EXPIRED",
-              "message": "Loss date 2026-07-06 is after policy expiration date 2026-06-15. Policy may not have been in force at time of loss.",
+              "code": "POLICY_EXPIRED_AT_LOSS",
+              "message": "Loss date 2026-07-06 is after policy expiration date 2026-06-15. Policy may have been renewed but system shows term ended before loss.",
               "severity": "critical"
             },
             {
-              "code": "LOCATION_MISSING",
-              "message": "Property location not specified in submission.",
+              "code": "MODERATE_DAMAGE_AMOUNT",
+              "message": "Estimated damage of $14,000 is moderate for a kitchen fire; contractor estimate should be verified during adjudication.",
               "severity": "info"
             }
           ]
@@ -3403,7 +3077,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean fire claim on homeowners dwelling -> expect auto-approve",
-    "latency_seconds": 18.92
+    "latency_seconds": 17.68
   },
   {
     "claim_id": "claim-020",
@@ -3415,18 +3089,13 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "wind_hail",
       "location": null,
-      "description": "Hailstorm caused dozens of dents in roof shingles and cracked two skylights. Roofer quoted $11,500 to replace affected sections.",
+      "description": "Hailstorm caused dozens of dents in roof shingles and cracked two skylights. Roofer quoted $11,500 to replace the affected sections.",
       "estimated_damage_usd": 11500.0
     },
-    "decision": "auto-approve intake",
-    "confidence": 0.95,
-    "reasoning_summary": "Policy POL-11502 was active on the loss date (2026-07-19), and dwelling coverage responds to wind_hail losses with a $350,000 limit and $1,000 deductible. The estimated damage of $11,500 is well within policy limits and typical for hail damage to roof shingles and skylights. No exclusions apply, and all critical information was clearly stated in the submission.",
+    "decision": "flag for adjuster review",
+    "confidence": 0.85,
+    "reasoning_summary": "Policy POL-11502 was active on the loss date and dwelling coverage responds to wind_hail losses with a $350,000 limit and $1,000 deductible. The $11,500 estimate is within the limit and reasonable for hail damage to roof shingles and skylights. However, the submission lacks supporting documentation (no roofer's quote invoice attached, no damage photos) for a claim above $10,000, which warrants adjuster review to verify the scope and cost of repairs.",
     "evidence": [
-      {
-        "source": "policy:POL-11502",
-        "rule_id": null,
-        "text": "Robert Chen's homeowners policy POL-11502, status=active, effective 2025-12-01 to 2026-12-01."
-      },
       {
         "source": "policy:POL-11502.status",
         "rule_id": null,
@@ -3440,16 +3109,13 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "MISSING_LOCATION",
-        "message": "Loss location not specified in submission",
-        "severity": "info"
-      },
-      {
-        "code": "MISSING_TIME",
-        "message": "Time of loss not specified",
-        "severity": "info"
+        "code": "MISSING_DOCUMENTATION",
+        "message": "Claim estimate is $11,500 but no roofer's invoice or damage photos were attached to support the stated repair cost.",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -3461,10 +3127,25 @@ const FNOL_TRACES = [
           "loss_type": "wind_hail",
           "location": null,
           "estimated_damage_usd": 11500,
-          "description": "Hailstorm caused dozens of dents in roof shingles and cracked two skylights. Roofer quoted $11,500 to replace affected sections."
+          "description": "Hailstorm caused dozens of dents in roof shingles and cracked two skylights. Roofer quoted $11,500 to replace the affected sections."
         },
         "tool_result": {
           "recorded": true
+        }
+      },
+      {
+        "tool_name": "check_policy_status",
+        "tool_input": {
+          "policy_number": "POL-11502",
+          "loss_date": "2026-07-19"
+        },
+        "tool_result": {
+          "active": true,
+          "reason": "Policy was in force on the loss date.",
+          "evidence": {
+            "source": "policy:POL-11502.status",
+            "text": "Policy status is 'active'; term 2025-12-01 to 2026-12-01."
+          }
         }
       },
       {
@@ -3504,21 +3185,6 @@ const FNOL_TRACES = [
         }
       },
       {
-        "tool_name": "check_policy_status",
-        "tool_input": {
-          "policy_number": "POL-11502",
-          "loss_date": "2026-07-19"
-        },
-        "tool_result": {
-          "active": true,
-          "reason": "Policy was in force on the loss date.",
-          "evidence": {
-            "source": "policy:POL-11502.status",
-            "text": "Policy status is 'active'; term 2025-12-01 to 2026-12-01."
-          }
-        }
-      },
-      {
         "tool_name": "check_coverage",
         "tool_input": {
           "policy_number": "POL-11502",
@@ -3550,15 +3216,10 @@ const FNOL_TRACES = [
       {
         "tool_name": "submit_decision",
         "tool_input": {
-          "decision": "auto-approve intake",
-          "confidence": 0.95,
-          "reasoning_summary": "Policy POL-11502 was active on the loss date (2026-07-19), and dwelling coverage responds to wind_hail losses with a $350,000 limit and $1,000 deductible. The estimated damage of $11,500 is well within policy limits and typical for hail damage to roof shingles and skylights. No exclusions apply, and all critical information was clearly stated in the submission.",
+          "decision": "flag for adjuster review",
+          "confidence": 0.85,
+          "reasoning_summary": "Policy POL-11502 was active on the loss date and dwelling coverage responds to wind_hail losses with a $350,000 limit and $1,000 deductible. The $11,500 estimate is within the limit and reasonable for hail damage to roof shingles and skylights. However, the submission lacks supporting documentation (no roofer's quote invoice attached, no damage photos) for a claim above $10,000, which warrants adjuster review to verify the scope and cost of repairs.",
           "evidence": [
-            {
-              "source": "policy:POL-11502",
-              "text": "Robert Chen's homeowners policy POL-11502, status=active, effective 2025-12-01 to 2026-12-01.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11502.status",
               "text": "Policy status is 'active'; term 2025-12-01 to 2026-12-01.",
@@ -3572,14 +3233,9 @@ const FNOL_TRACES = [
           ],
           "flags": [
             {
-              "code": "MISSING_LOCATION",
-              "message": "Loss location not specified in submission",
-              "severity": "info"
-            },
-            {
-              "code": "MISSING_TIME",
-              "message": "Time of loss not specified",
-              "severity": "info"
+              "code": "MISSING_DOCUMENTATION",
+              "message": "Claim estimate is $11,500 but no roofer's invoice or damage photos were attached to support the stated repair cost.",
+              "severity": "warning"
             }
           ]
         },
@@ -3591,7 +3247,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean wind/hail claim on homeowners dwelling -> expect auto-approve",
-    "latency_seconds": 14.17
+    "latency_seconds": 15.06
   },
   {
     "claim_id": "claim-021",
@@ -3603,12 +3259,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "water_damage_gradual",
       "location": null,
-      "description": "Slow leak under shower pan for at least a year caused soft bathroom floor, rotted subfloor and framing.",
+      "description": "Slow leak under shower pan caused subfloor and framing rot. Plumber estimates the leak has been ongoing for at least a year.",
       "estimated_damage_usd": 9800.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "This claim involves gradual water damage from a slow leak that has been occurring for at least a year, resulting in rotted subfloor and framing. The policy explicitly excludes gradual water damage and only covers sudden and accidental water discharge. No coverage responds to this loss type. The claim must be flagged for adjuster review due to the applicable exclusion.",
+    "reasoning_summary": "The policy is active and the policyholder is correctly identified. However, this is a gradual water damage claim (slow leak over at least a year causing rot), and the policy explicitly excludes gradual leaks, seepage, and long-term moisture intrusion. The policy only covers sudden and accidental water discharge. The $9,800 estimate is within normal range, but the claim falls under a specific policy exclusion that requires adjuster review for potential denial.",
     "evidence": [
       {
         "source": "policy:POL-10891",
@@ -3629,32 +3285,34 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "EXCLUSION_MATCH",
-        "message": "Gradual water damage exclusion (EXCL-GRADUAL-WATER) applies to this loss. Plumber indicates leak has been ongoing for at least a year.",
+        "message": "Policy exclusion EXCL-GRADUAL-WATER applies: gradual leaks and long-term moisture intrusion are excluded; only sudden and accidental water damage is covered.",
         "severity": "critical"
       },
       {
         "code": "NO_COVERAGE",
-        "message": "No coverage on policy responds to loss_type 'water_damage_gradual'. Policy only covers sudden and accidental water discharge.",
+        "message": "No coverage responds to loss_type 'water_damage_gradual'. Policy has water_damage_sudden coverage only.",
         "severity": "critical"
       },
       {
         "code": "MISSING_DATE_OF_LOSS",
-        "message": "No specific date of loss provided. Ongoing gradual damage makes dating difficult.",
-        "severity": "warning"
+        "message": "No specific date of loss provided. Gradual damage over at least a year makes dating difficult.",
+        "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
         "tool_input": {
-          "description": "Slow leak under shower pan for at least a year caused soft bathroom floor, rotted subfloor and framing.",
           "policyholder_name": "James Whitfield",
           "policy_number": "POL-10891",
           "date_of_loss": null,
           "time_of_loss": null,
           "loss_type": "water_damage_gradual",
           "location": null,
-          "estimated_damage_usd": 9800
+          "estimated_damage_usd": 9800,
+          "description": "Slow leak under shower pan caused subfloor and framing rot. Plumber estimates the leak has been ongoing for at least a year."
         },
         "tool_result": {
           "recorded": true
@@ -3737,7 +3395,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "This claim involves gradual water damage from a slow leak that has been occurring for at least a year, resulting in rotted subfloor and framing. The policy explicitly excludes gradual water damage and only covers sudden and accidental water discharge. No coverage responds to this loss type. The claim must be flagged for adjuster review due to the applicable exclusion.",
+          "reasoning_summary": "The policy is active and the policyholder is correctly identified. However, this is a gradual water damage claim (slow leak over at least a year causing rot), and the policy explicitly excludes gradual leaks, seepage, and long-term moisture intrusion. The policy only covers sudden and accidental water discharge. The $9,800 estimate is within normal range, but the claim falls under a specific policy exclusion that requires adjuster review for potential denial.",
           "evidence": [
             {
               "source": "policy:POL-10891",
@@ -3758,18 +3416,18 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "EXCLUSION_MATCH",
-              "message": "Gradual water damage exclusion (EXCL-GRADUAL-WATER) applies to this loss. Plumber indicates leak has been ongoing for at least a year.",
+              "message": "Policy exclusion EXCL-GRADUAL-WATER applies: gradual leaks and long-term moisture intrusion are excluded; only sudden and accidental water damage is covered.",
               "severity": "critical"
             },
             {
               "code": "NO_COVERAGE",
-              "message": "No coverage on policy responds to loss_type 'water_damage_gradual'. Policy only covers sudden and accidental water discharge.",
+              "message": "No coverage responds to loss_type 'water_damage_gradual'. Policy has water_damage_sudden coverage only.",
               "severity": "critical"
             },
             {
               "code": "MISSING_DATE_OF_LOSS",
-              "message": "No specific date of loss provided. Ongoing gradual damage makes dating difficult.",
-              "severity": "warning"
+              "message": "No specific date of loss provided. Gradual damage over at least a year makes dating difficult.",
+              "severity": "info"
             }
           ]
         },
@@ -3781,7 +3439,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "gradual water leak, explicitly stated as long-term -> matches gradual-water exclusion",
-    "latency_seconds": 20.55
+    "latency_seconds": 19.23
   },
   {
     "claim_id": "claim-022",
@@ -3792,26 +3450,28 @@ const FNOL_TRACES = [
       "date_of_loss": "2026-07-20",
       "time_of_loss": null,
       "loss_type": "auto_collision",
-      "location": "in front of house",
-      "description": "Policyholder was parking in front of their house when another vehicle came from behind and hit their car, damaging the trunk.",
+      "location": "in front of policyholder's house",
+      "description": "Policyholder was parking in front of their house when another vehicle came from behind and hit their car, damaging the entire trunk.",
       "estimated_damage_usd": 5000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.95,
-    "reasoning_summary": "Policy number POL-28456 was not found in the system. While the claim submission is clear and complete (auto collision with $5,000 estimated damage on July 20, 2026), we cannot validate coverage or policy status without a valid policy record. This requires adjuster review to verify the correct policy number and determine if the policyholder has active coverage.",
+    "reasoning_summary": "The policyholder provided policy number POL-28456, but this policy does not exist in the system. The claim narrative is clear and complete (auto collision on 2026-07-20, $5,000 trunk damage from a rear-end collision while parking), but without a valid policy record we cannot verify coverage, status, or eligibility. This requires adjuster review to confirm the correct policy number and investigate whether this is a data entry error or an invalid policy claim.",
     "evidence": [],
     "flags": [
       {
         "code": "POLICY_NOT_FOUND",
-        "message": "Policy number POL-28456 does not exist in the system",
+        "message": "Policy number POL-28456 does not exist in the system. Unable to verify coverage or active status.",
         "severity": "critical"
       },
       {
-        "code": "CANNOT_VERIFY_COVERAGE",
-        "message": "Unable to verify coverage due to missing policy record",
-        "severity": "critical"
+        "code": "NO_ATTACHMENTS",
+        "message": "No damage photos or repair estimates provided to support the $5,000 damage claim.",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -3820,10 +3480,10 @@ const FNOL_TRACES = [
           "policy_number": "POL-28456",
           "date_of_loss": "2026-07-20",
           "time_of_loss": null,
+          "location": "in front of policyholder's house",
           "loss_type": "auto_collision",
-          "location": "in front of house",
           "estimated_damage_usd": 5000,
-          "description": "Policyholder was parking in front of their house when another vehicle came from behind and hit their car, damaging the trunk."
+          "description": "Policyholder was parking in front of their house when another vehicle came from behind and hit their car, damaging the entire trunk."
         },
         "tool_result": {
           "recorded": true
@@ -3877,18 +3537,18 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.95,
-          "reasoning_summary": "Policy number POL-28456 was not found in the system. While the claim submission is clear and complete (auto collision with $5,000 estimated damage on July 20, 2026), we cannot validate coverage or policy status without a valid policy record. This requires adjuster review to verify the correct policy number and determine if the policyholder has active coverage.",
+          "reasoning_summary": "The policyholder provided policy number POL-28456, but this policy does not exist in the system. The claim narrative is clear and complete (auto collision on 2026-07-20, $5,000 trunk damage from a rear-end collision while parking), but without a valid policy record we cannot verify coverage, status, or eligibility. This requires adjuster review to confirm the correct policy number and investigate whether this is a data entry error or an invalid policy claim.",
           "evidence": [],
           "flags": [
             {
               "code": "POLICY_NOT_FOUND",
-              "message": "Policy number POL-28456 does not exist in the system",
+              "message": "Policy number POL-28456 does not exist in the system. Unable to verify coverage or active status.",
               "severity": "critical"
             },
             {
-              "code": "CANNOT_VERIFY_COVERAGE",
-              "message": "Unable to verify coverage due to missing policy record",
-              "severity": "critical"
+              "code": "NO_ATTACHMENTS",
+              "message": "No damage photos or repair estimates provided to support the $5,000 damage claim.",
+              "severity": "warning"
             }
           ]
         },
@@ -3900,7 +3560,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "Auto damage",
-    "latency_seconds": 16.74
+    "latency_seconds": 16.57
   },
   {
     "claim_id": "claim-023",
@@ -3912,18 +3572,13 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "vandalism",
       "location": "apartment parking lot",
-      "description": "Policyholder woke up to find both side mirrors snapped off and a long key-scratch down the side of her car in the apartment parking lot. Perpetrator unknown.",
+      "description": "Policyholder discovered both side mirrors snapped off and a long key-scratch down the side of her car in the apartment parking lot. Perpetrator unknown.",
       "estimated_damage_usd": 2900.0
     },
     "decision": "auto-approve intake",
-    "confidence": 0.95,
-    "reasoning_summary": "Sofia Marchetti's auto policy POL-11689 was active on the date of loss (2026-07-21). The vandalism damage to her vehicle (mirrors snapped off and key-scratch) is covered under comprehensive coverage with a $75,000 limit and $250 deductible. The estimated damage of $2,900 is well within the coverage limit and reasonable for this type of vandalism. No exclusions apply to this loss.",
+    "confidence": 0.92,
+    "reasoning_summary": "The policy was active on the date of loss (2026-07-21), and comprehensive coverage responds to vandalism with a $75,000 limit and $250 deductible. No exclusions apply. The claim is clearly described (both mirrors snapped off and key-scratch), the estimated damage of $2,900 is reasonable for this type of vandalism, and all required fields are present. No supporting photos or repair estimates were attached, but given the modest damage amount and straightforward nature of the loss, this is acceptable for intake approval.",
     "evidence": [
-      {
-        "source": "policy:POL-11689",
-        "rule_id": null,
-        "text": "Sofia Marchetti's auto policy POL-11689, status=active, effective 2025-08-20 to 2026-08-20."
-      },
       {
         "source": "policy:POL-11689.status",
         "rule_id": null,
@@ -3937,11 +3592,13 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "PERPETRATOR_UNKNOWN",
-        "message": "Policyholder states perpetrator is unknown; may require police report verification.",
+        "code": "NO_ATTACHMENTS",
+        "message": "No damage photos or repair estimates provided. Adjuster may want to request documentation during investigation.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -3950,49 +3607,13 @@ const FNOL_TRACES = [
           "policy_number": "POL-11689",
           "date_of_loss": "2026-07-21",
           "time_of_loss": null,
-          "location": "apartment parking lot",
           "loss_type": "vandalism",
+          "location": "apartment parking lot",
           "estimated_damage_usd": 2900,
-          "description": "Policyholder woke up to find both side mirrors snapped off and a long key-scratch down the side of her car in the apartment parking lot. Perpetrator unknown."
+          "description": "Policyholder discovered both side mirrors snapped off and a long key-scratch down the side of her car in the apartment parking lot. Perpetrator unknown."
         },
         "tool_result": {
           "recorded": true
-        }
-      },
-      {
-        "tool_name": "lookup_policy",
-        "tool_input": {
-          "policy_number": "POL-11689"
-        },
-        "tool_result": {
-          "found": true,
-          "policy_number": "POL-11689",
-          "policyholder_name": "Sofia Marchetti",
-          "policy_type": "auto",
-          "status": "active",
-          "effective_date": "2025-08-20",
-          "expiration_date": "2026-08-20",
-          "coverages": [
-            {
-              "coverage_type": "collision",
-              "limit": 75000,
-              "deductible": 250
-            },
-            {
-              "coverage_type": "comprehensive",
-              "limit": 75000,
-              "deductible": 250
-            },
-            {
-              "coverage_type": "liability",
-              "limit": 250000,
-              "deductible": 0
-            }
-          ],
-          "evidence": {
-            "source": "policy:POL-11689",
-            "text": "Sofia Marchetti's auto policy POL-11689, status=active, effective 2025-08-20 to 2026-08-20."
-          }
         }
       },
       {
@@ -4043,14 +3664,9 @@ const FNOL_TRACES = [
         "tool_name": "submit_decision",
         "tool_input": {
           "decision": "auto-approve intake",
-          "confidence": 0.95,
-          "reasoning_summary": "Sofia Marchetti's auto policy POL-11689 was active on the date of loss (2026-07-21). The vandalism damage to her vehicle (mirrors snapped off and key-scratch) is covered under comprehensive coverage with a $75,000 limit and $250 deductible. The estimated damage of $2,900 is well within the coverage limit and reasonable for this type of vandalism. No exclusions apply to this loss.",
+          "confidence": 0.92,
+          "reasoning_summary": "The policy was active on the date of loss (2026-07-21), and comprehensive coverage responds to vandalism with a $75,000 limit and $250 deductible. No exclusions apply. The claim is clearly described (both mirrors snapped off and key-scratch), the estimated damage of $2,900 is reasonable for this type of vandalism, and all required fields are present. No supporting photos or repair estimates were attached, but given the modest damage amount and straightforward nature of the loss, this is acceptable for intake approval.",
           "evidence": [
-            {
-              "source": "policy:POL-11689",
-              "text": "Sofia Marchetti's auto policy POL-11689, status=active, effective 2025-08-20 to 2026-08-20.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11689.status",
               "text": "Policy status is 'active'; term 2025-08-20 to 2026-08-20.",
@@ -4064,8 +3680,8 @@ const FNOL_TRACES = [
           ],
           "flags": [
             {
-              "code": "PERPETRATOR_UNKNOWN",
-              "message": "Policyholder states perpetrator is unknown; may require police report verification.",
+              "code": "NO_ATTACHMENTS",
+              "message": "No damage photos or repair estimates provided. Adjuster may want to request documentation during investigation.",
               "severity": "info"
             }
           ]
@@ -4078,7 +3694,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "clean vandalism claim under comprehensive -> expect auto-approve",
-    "latency_seconds": 17.11
+    "latency_seconds": 14.66
   },
   {
     "claim_id": "claim-024",
@@ -4090,25 +3706,27 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "auto_collision",
       "location": "interstate",
-      "description": "Policyholder hit a pothole on the interstate, resulting in two blown passenger-side tires and a bent rim.",
+      "description": "Policyholder hit a pothole hard on the interstate, resulting in damage to both passenger-side tires (blown out) and a bent rim.",
       "estimated_damage_usd": 1100.0
     },
     "decision": "flag for adjuster review",
-    "confidence": 0.85,
-    "reasoning_summary": "The policy number POL-10239 provided by the policyholder does not exist in the system, and the claimant acknowledged uncertainty about the exact number (\"could be off by a digit\"). The loss description is clear and the damage amount is reasonable for the claimed incident (pothole damage to tires and rim). An adjuster needs to verify the correct policy number before intake can proceed.",
+    "confidence": 0.75,
+    "reasoning_summary": "Policyholder provided policy number POL-10239 but explicitly noted it \"could be off by a digit.\" Policy lookup returned no matching record. The loss details are clear (pothole damage to tires and rim on 2026-07-17, estimated $1,100), but without a valid policy number we cannot verify coverage, policy status, or proceed with automated intake. An adjuster must confirm the correct policy number before processing.",
     "evidence": [],
     "flags": [
       {
         "code": "POLICY_NOT_FOUND",
-        "message": "Policy number POL-10239 not found in system; claimant stated uncertainty about exact digits",
+        "message": "Policy number POL-10239 not found in system. Policyholder acknowledged uncertainty ('could be off by a digit').",
         "severity": "critical"
       },
       {
-        "code": "POLICY_NUMBER_UNCERTAIN",
-        "message": "Claimant stated policy number 'could be off by a digit'",
-        "severity": "warning"
+        "code": "LOSS_TYPE_CLASSIFICATION",
+        "message": "Pothole damage may fall under collision or comprehensive coverage depending on policy language; adjuster should verify appropriate coverage type.",
+        "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -4120,7 +3738,7 @@ const FNOL_TRACES = [
           "location": "interstate",
           "loss_type": "auto_collision",
           "estimated_damage_usd": 1100,
-          "description": "Policyholder hit a pothole on the interstate, resulting in two blown passenger-side tires and a bent rim."
+          "description": "Policyholder hit a pothole hard on the interstate, resulting in damage to both passenger-side tires (blown out) and a bent rim."
         },
         "tool_result": {
           "recorded": true
@@ -4137,55 +3755,22 @@ const FNOL_TRACES = [
         }
       },
       {
-        "tool_name": "check_policy_status",
-        "tool_input": {
-          "policy_number": "POL-10239",
-          "loss_date": "2026-07-17"
-        },
-        "tool_result": {
-          "active": false,
-          "reason": "No policy on file with number 'POL-10239'."
-        }
-      },
-      {
-        "tool_name": "check_coverage",
-        "tool_input": {
-          "policy_number": "POL-10239",
-          "loss_type": "auto_collision"
-        },
-        "tool_result": {
-          "covered": false,
-          "reason": "No policy on file with number 'POL-10239'."
-        }
-      },
-      {
-        "tool_name": "check_exclusions",
-        "tool_input": {
-          "policy_number": "POL-10239",
-          "loss_type": "auto_collision"
-        },
-        "tool_result": {
-          "excluded": false,
-          "matches": []
-        }
-      },
-      {
         "tool_name": "submit_decision",
         "tool_input": {
           "decision": "flag for adjuster review",
-          "confidence": 0.85,
-          "reasoning_summary": "The policy number POL-10239 provided by the policyholder does not exist in the system, and the claimant acknowledged uncertainty about the exact number (\"could be off by a digit\"). The loss description is clear and the damage amount is reasonable for the claimed incident (pothole damage to tires and rim). An adjuster needs to verify the correct policy number before intake can proceed.",
+          "confidence": 0.75,
+          "reasoning_summary": "Policyholder provided policy number POL-10239 but explicitly noted it \"could be off by a digit.\" Policy lookup returned no matching record. The loss details are clear (pothole damage to tires and rim on 2026-07-17, estimated $1,100), but without a valid policy number we cannot verify coverage, policy status, or proceed with automated intake. An adjuster must confirm the correct policy number before processing.",
           "evidence": [],
           "flags": [
             {
               "code": "POLICY_NOT_FOUND",
-              "message": "Policy number POL-10239 not found in system; claimant stated uncertainty about exact digits",
+              "message": "Policy number POL-10239 not found in system. Policyholder acknowledged uncertainty ('could be off by a digit').",
               "severity": "critical"
             },
             {
-              "code": "POLICY_NUMBER_UNCERTAIN",
-              "message": "Claimant stated policy number 'could be off by a digit'",
-              "severity": "warning"
+              "code": "LOSS_TYPE_CLASSIFICATION",
+              "message": "Pothole damage may fall under collision or comprehensive coverage depending on policy language; adjuster should verify appropriate coverage type.",
+              "severity": "info"
             }
           ]
         },
@@ -4197,7 +3782,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "policy number typo / not found -> expect flag",
-    "latency_seconds": 17.54
+    "latency_seconds": 13.98
   },
   {
     "claim_id": "claim-025",
@@ -4209,18 +3794,13 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "auto_collision",
       "location": "highway",
-      "description": "Multi-car pileup involving approximately six vehicles on a highway in heavy fog conditions. Policyholder's vehicle is likely a total loss with repair estimates at $27,000.",
+      "description": "Multi-car pileup on highway in heavy fog involving approximately six vehicles. Policyholder's car sustained significant damage and is likely a total loss with repair estimate of $27,000 exceeding vehicle value.",
       "estimated_damage_usd": 27000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.85,
-    "reasoning_summary": "Policy POL-11367 was active on the loss date and collision coverage responds with a $25,000 limit and $1,000 deductible. However, the estimated damage of $27,000 exceeds the coverage limit by $2,000, requiring adjuster review to determine actual cash value and whether this is truly a total loss. Additionally, an exclusion for commercial vehicle use exists on the policy and should be verified as not applicable to this incident. The claim requires adjuster evaluation of the coverage gap and exclusion applicability.",
+    "reasoning_summary": "The policy is active and collision coverage responds to this multi-car pileup loss. However, three significant factors require adjuster review: (1) the estimated damage of $27,000 exceeds the $25,000 collision coverage limit, (2) the policyholder explicitly mentioned being on a \"lower coverage tier\" and uncertainty about what will be paid out, and (3) a commercial-use exclusion exists on the policy that should be investigated to confirm this was personal use. The claim narrative is clear and complete, but the coverage limit shortfall and potential total loss require adjuster evaluation.",
     "evidence": [
-      {
-        "source": "policy:POL-11367",
-        "rule_id": null,
-        "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01."
-      },
       {
         "source": "policy:POL-11367.status",
         "rule_id": null,
@@ -4240,25 +3820,27 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "DAMAGE_EXCEEDS_LIMIT",
-        "message": "Estimated damage ($27,000) exceeds collision coverage limit ($25,000) by $2,000",
+        "message": "Estimated damage ($27,000) exceeds collision coverage limit ($25,000)",
         "severity": "warning"
       },
       {
         "code": "POTENTIAL_TOTAL_LOSS",
-        "message": "Policyholder indicates vehicle is likely a total loss; requires adjuster evaluation",
+        "message": "Policyholder indicates repair estimate exceeds vehicle value; likely total loss",
         "severity": "warning"
       },
       {
-        "code": "EXCLUSION_PRESENT",
-        "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) exists on policy; verify not applicable to this loss",
+        "code": "EXCLUSION_INVESTIGATION_NEEDED",
+        "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) present on policy; verify this was personal use",
         "severity": "info"
       },
       {
-        "code": "COVERAGE_TIER_CONCERN",
-        "message": "Policyholder mentions being on 'lower coverage tier' and uncertain about payout",
-        "severity": "info"
+        "code": "HIGH_VALUE_CLAIM",
+        "message": "Estimated damage of $27,000 warrants adjuster review",
+        "severity": "warning"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -4267,10 +3849,10 @@ const FNOL_TRACES = [
           "policy_number": "POL-11367",
           "date_of_loss": "2026-07-13",
           "time_of_loss": null,
-          "loss_type": "auto_collision",
           "location": "highway",
+          "loss_type": "auto_collision",
           "estimated_damage_usd": 27000,
-          "description": "Multi-car pileup involving approximately six vehicles on a highway in heavy fog conditions. Policyholder's vehicle is likely a total loss with repair estimates at $27,000."
+          "description": "Multi-car pileup on highway in heavy fog involving approximately six vehicles. Policyholder's car sustained significant damage and is likely a total loss with repair estimate of $27,000 exceeding vehicle value."
         },
         "tool_result": {
           "recorded": true
@@ -4366,13 +3948,8 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.85,
-          "reasoning_summary": "Policy POL-11367 was active on the loss date and collision coverage responds with a $25,000 limit and $1,000 deductible. However, the estimated damage of $27,000 exceeds the coverage limit by $2,000, requiring adjuster review to determine actual cash value and whether this is truly a total loss. Additionally, an exclusion for commercial vehicle use exists on the policy and should be verified as not applicable to this incident. The claim requires adjuster evaluation of the coverage gap and exclusion applicability.",
+          "reasoning_summary": "The policy is active and collision coverage responds to this multi-car pileup loss. However, three significant factors require adjuster review: (1) the estimated damage of $27,000 exceeds the $25,000 collision coverage limit, (2) the policyholder explicitly mentioned being on a \"lower coverage tier\" and uncertainty about what will be paid out, and (3) a commercial-use exclusion exists on the policy that should be investigated to confirm this was personal use. The claim narrative is clear and complete, but the coverage limit shortfall and potential total loss require adjuster evaluation.",
           "evidence": [
-            {
-              "source": "policy:POL-11367",
-              "text": "Angela Brooks's auto policy POL-11367, status=active, effective 2026-02-01 to 2027-02-01.",
-              "rule_id": null
-            },
             {
               "source": "policy:POL-11367.status",
               "text": "Policy status is 'active'; term 2026-02-01 to 2027-02-01.",
@@ -4392,23 +3969,23 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "DAMAGE_EXCEEDS_LIMIT",
-              "message": "Estimated damage ($27,000) exceeds collision coverage limit ($25,000) by $2,000",
+              "message": "Estimated damage ($27,000) exceeds collision coverage limit ($25,000)",
               "severity": "warning"
             },
             {
               "code": "POTENTIAL_TOTAL_LOSS",
-              "message": "Policyholder indicates vehicle is likely a total loss; requires adjuster evaluation",
+              "message": "Policyholder indicates repair estimate exceeds vehicle value; likely total loss",
               "severity": "warning"
             },
             {
-              "code": "EXCLUSION_PRESENT",
-              "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) exists on policy; verify not applicable to this loss",
+              "code": "EXCLUSION_INVESTIGATION_NEEDED",
+              "message": "Commercial use exclusion (EXCL-COMMERCIAL-USE) present on policy; verify this was personal use",
               "severity": "info"
             },
             {
-              "code": "COVERAGE_TIER_CONCERN",
-              "message": "Policyholder mentions being on 'lower coverage tier' and uncertain about payout",
-              "severity": "info"
+              "code": "HIGH_VALUE_CLAIM",
+              "message": "Estimated damage of $27,000 warrants adjuster review",
+              "severity": "warning"
             }
           ]
         },
@@ -4420,7 +3997,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "auto damage above coverage limit -> expect flag",
-    "latency_seconds": 19.9
+    "latency_seconds": 20.81
   },
   {
     "claim_id": "claim-026",
@@ -4432,12 +4009,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "other",
       "location": null,
-      "description": "Damage to house siding and gutter discovered over the weekend; large gouge in siding and bent gutter. Cause unknown - possibly wind, falling branch, or vehicle impact.",
+      "description": "Damage to house siding and gutter, including a large gouge in siding and bent gutter. Cause unknown - possibly wind, falling branch, or vehicle collision.",
       "estimated_damage_usd": null
     },
-    "decision": "request more info",
-    "confidence": 0.85,
-    "reasoning_summary": "The claim lacks a specific date of loss (only \"over the weekend\") and the cause of damage is completely unknown - it could be wind, falling branch, or vehicle impact. Without knowing the actual cause, we cannot determine which coverage (if any) would respond. The policyholder states they \"haven't had a chance to look closely yet,\" so additional investigation is needed before we can classify the loss type and verify coverage.",
+    "decision": "flag for adjuster review",
+    "confidence": 0.75,
+    "reasoning_summary": "The claim lacks a specific date of loss (only \"over the weekend\") and the cause of damage is unknown - the policyholder is unsure if it was wind, a falling branch, or vehicle impact. This ambiguity prevents proper classification of the loss type. While the policy is active, no coverage check could be performed for specific perils (wind_hail, auto_collision, vandalism) because the actual cause has not been determined. An adjuster needs to investigate the cause and obtain a specific loss date before coverage can be properly assessed.",
     "evidence": [
       {
         "source": "policy:POL-11502",
@@ -4453,17 +4030,12 @@ const FNOL_TRACES = [
     "flags": [
       {
         "code": "MISSING_DATE_OF_LOSS",
-        "message": "No specific date of loss provided - only 'over the weekend'",
-        "severity": "critical"
+        "message": "Date of loss not specified - only stated as 'over the weekend'",
+        "severity": "warning"
       },
       {
         "code": "AMBIGUOUS_CAUSE",
-        "message": "Cause of damage unknown - could be wind, falling branch, or vehicle impact. Cannot classify loss type without investigation.",
-        "severity": "critical"
-      },
-      {
-        "code": "INCOMPLETE_INSPECTION",
-        "message": "Policyholder states they haven't looked closely at the damage yet",
+        "message": "Cause of damage unknown - could be wind, falling branch, or vehicle collision. Cannot determine applicable coverage without investigation.",
         "severity": "warning"
       },
       {
@@ -4472,6 +4044,8 @@ const FNOL_TRACES = [
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -4483,7 +4057,7 @@ const FNOL_TRACES = [
           "loss_type": "other",
           "location": null,
           "estimated_damage_usd": null,
-          "description": "Damage to house siding and gutter discovered over the weekend; large gouge in siding and bent gutter. Cause unknown - possibly wind, falling branch, or vehicle impact."
+          "description": "Damage to house siding and gutter, including a large gouge in siding and bent gutter. Cause unknown - possibly wind, falling branch, or vehicle collision."
         },
         "tool_result": {
           "recorded": true
@@ -4554,9 +4128,9 @@ const FNOL_TRACES = [
       {
         "tool_name": "submit_decision",
         "tool_input": {
-          "decision": "request more info",
-          "confidence": 0.85,
-          "reasoning_summary": "The claim lacks a specific date of loss (only \"over the weekend\") and the cause of damage is completely unknown - it could be wind, falling branch, or vehicle impact. Without knowing the actual cause, we cannot determine which coverage (if any) would respond. The policyholder states they \"haven't had a chance to look closely yet,\" so additional investigation is needed before we can classify the loss type and verify coverage.",
+          "decision": "flag for adjuster review",
+          "confidence": 0.75,
+          "reasoning_summary": "The claim lacks a specific date of loss (only \"over the weekend\") and the cause of damage is unknown - the policyholder is unsure if it was wind, a falling branch, or vehicle impact. This ambiguity prevents proper classification of the loss type. While the policy is active, no coverage check could be performed for specific perils (wind_hail, auto_collision, vandalism) because the actual cause has not been determined. An adjuster needs to investigate the cause and obtain a specific loss date before coverage can be properly assessed.",
           "evidence": [
             {
               "source": "policy:POL-11502",
@@ -4572,17 +4146,12 @@ const FNOL_TRACES = [
           "flags": [
             {
               "code": "MISSING_DATE_OF_LOSS",
-              "message": "No specific date of loss provided - only 'over the weekend'",
-              "severity": "critical"
+              "message": "Date of loss not specified - only stated as 'over the weekend'",
+              "severity": "warning"
             },
             {
               "code": "AMBIGUOUS_CAUSE",
-              "message": "Cause of damage unknown - could be wind, falling branch, or vehicle impact. Cannot classify loss type without investigation.",
-              "severity": "critical"
-            },
-            {
-              "code": "INCOMPLETE_INSPECTION",
-              "message": "Policyholder states they haven't looked closely at the damage yet",
+              "message": "Cause of damage unknown - could be wind, falling branch, or vehicle collision. Cannot determine applicable coverage without investigation.",
               "severity": "warning"
             },
             {
@@ -4600,7 +4169,7 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "ambiguous cause on homeowners, no clear loss_type -> expect request more info",
-    "latency_seconds": 21.0
+    "latency_seconds": 19.68
   },
   {
     "claim_id": "claim-027",
@@ -4612,12 +4181,12 @@ const FNOL_TRACES = [
       "time_of_loss": null,
       "loss_type": "theft",
       "location": null,
-      "description": "Theft from detached shed - ride-on mower, generator, and various tools were stolen at an unknown time over the last few days.",
+      "description": "Someone broke into the policyholder's detached shed over the last few days and stole a ride-on mower, generator, and various tools. The exact date is unknown as the shed is not checked daily.",
       "estimated_damage_usd": 16000.0
     },
     "decision": "flag for adjuster review",
     "confidence": 0.75,
-    "reasoning_summary": "Policy POL-11220 is active and theft coverage responds with adequate limits ($200,000). The estimated loss of $16,000 is reasonable. However, the claim lacks an exact date of loss (only \"over the last few days\"), which is required for proper claim handling. Additionally, a vacancy exclusion exists on the policy that should be reviewed by an adjuster, though it likely doesn't apply to property stored in a detached shed. The missing date of loss warrants adjuster review before approval.",
+    "reasoning_summary": "The policy is active and provides theft coverage under personal property with a $200,000 limit and $1,500 deductible. However, several concerns require adjuster review: the claimant cannot provide a specific date of loss (only \"over the last few days\"), the estimated value of $16,000 in stolen items lacks any supporting documentation (receipts, photos, or proof of ownership), and an exclusion exists for losses during vacancy periods exceeding 60 consecutive days that needs investigation. The adjuster should verify the exact loss timeframe, obtain proof of ownership and value for the stolen items, and confirm the property has not been vacant.",
     "evidence": [
       {
         "source": "policy:POL-11220",
@@ -4637,21 +4206,28 @@ const FNOL_TRACES = [
     ],
     "flags": [
       {
-        "code": "MISSING_DATE",
-        "message": "No exact date of loss provided - policyholder states 'over the last few days' but cannot specify when theft occurred",
+        "code": "MISSING_DATE_OF_LOSS",
+        "message": "Claimant states loss occurred 'over the last few days' but cannot provide a specific date. Exact date needed for policy status verification and claim investigation.",
         "severity": "warning"
       },
       {
-        "code": "EXCLUSION_PRESENT",
-        "message": "Vacancy exclusion (EXCL-VACANCY) exists on policy - review whether it applies to detached shed",
-        "severity": "info"
+        "code": "NO_SUPPORTING_DOCUMENTATION",
+        "message": "Estimated damage of $16,000 claimed with no receipts, photos of stolen items, or proof of ownership provided.",
+        "severity": "warning"
       },
       {
-        "code": "UNCERTAIN_TIMELINE",
-        "message": "Policyholder unsure of exact timing since shed is not checked daily",
+        "code": "EXCLUSION_MATCH",
+        "message": "Policy contains vacancy exclusion (EXCL-VACANCY). Adjuster must verify property has not been vacant for more than 60 consecutive days.",
+        "severity": "warning"
+      },
+      {
+        "code": "HIGH_VALUE_THEFT",
+        "message": "Theft claim exceeds $15,000. Requires verification of item values and ownership documentation.",
         "severity": "info"
       }
     ],
+    "attachments": [],
+    "attachment_reviews": [],
     "tool_calls": [
       {
         "tool_name": "record_extracted_fields",
@@ -4663,7 +4239,7 @@ const FNOL_TRACES = [
           "loss_type": "theft",
           "location": null,
           "estimated_damage_usd": 16000,
-          "description": "Theft from detached shed - ride-on mower, generator, and various tools were stolen at an unknown time over the last few days."
+          "description": "Someone broke into the policyholder's detached shed over the last few days and stole a ride-on mower, generator, and various tools. The exact date is unknown as the shed is not checked daily."
         },
         "tool_result": {
           "recorded": true
@@ -4702,21 +4278,6 @@ const FNOL_TRACES = [
           "evidence": {
             "source": "policy:POL-11220",
             "text": "David Kim's homeowners policy POL-11220, status=active, effective 2025-09-01 to 2026-09-01."
-          }
-        }
-      },
-      {
-        "tool_name": "check_policy_status",
-        "tool_input": {
-          "policy_number": "POL-11220",
-          "loss_date": "2025-09-15"
-        },
-        "tool_result": {
-          "active": true,
-          "reason": "Policy was in force on the loss date.",
-          "evidence": {
-            "source": "policy:POL-11220.status",
-            "text": "Policy status is 'active'; term 2025-09-01 to 2026-09-01."
           }
         }
       },
@@ -4764,7 +4325,7 @@ const FNOL_TRACES = [
         "tool_input": {
           "decision": "flag for adjuster review",
           "confidence": 0.75,
-          "reasoning_summary": "Policy POL-11220 is active and theft coverage responds with adequate limits ($200,000). The estimated loss of $16,000 is reasonable. However, the claim lacks an exact date of loss (only \"over the last few days\"), which is required for proper claim handling. Additionally, a vacancy exclusion exists on the policy that should be reviewed by an adjuster, though it likely doesn't apply to property stored in a detached shed. The missing date of loss warrants adjuster review before approval.",
+          "reasoning_summary": "The policy is active and provides theft coverage under personal property with a $200,000 limit and $1,500 deductible. However, several concerns require adjuster review: the claimant cannot provide a specific date of loss (only \"over the last few days\"), the estimated value of $16,000 in stolen items lacks any supporting documentation (receipts, photos, or proof of ownership), and an exclusion exists for losses during vacancy periods exceeding 60 consecutive days that needs investigation. The adjuster should verify the exact loss timeframe, obtain proof of ownership and value for the stolen items, and confirm the property has not been vacant.",
           "evidence": [
             {
               "source": "policy:POL-11220",
@@ -4773,29 +4334,34 @@ const FNOL_TRACES = [
             },
             {
               "source": "policy:POL-11220.coverages[1]",
-              "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses.",
-              "rule_id": "COV-2"
+              "rule_id": "COV-2",
+              "text": "personal_property coverage, limit $200,000, deductible $1,500, responds to 'theft' losses."
             },
             {
               "source": "policy:POL-11220.exclusions[0]",
-              "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded.",
-              "rule_id": "EXCL-VACANCY"
+              "rule_id": "EXCL-VACANCY",
+              "text": "Loss occurring while the dwelling has been vacant for more than 60 consecutive days is excluded."
             }
           ],
           "flags": [
             {
-              "code": "MISSING_DATE",
-              "message": "No exact date of loss provided - policyholder states 'over the last few days' but cannot specify when theft occurred",
+              "code": "MISSING_DATE_OF_LOSS",
+              "message": "Claimant states loss occurred 'over the last few days' but cannot provide a specific date. Exact date needed for policy status verification and claim investigation.",
               "severity": "warning"
             },
             {
-              "code": "EXCLUSION_PRESENT",
-              "message": "Vacancy exclusion (EXCL-VACANCY) exists on policy - review whether it applies to detached shed",
-              "severity": "info"
+              "code": "NO_SUPPORTING_DOCUMENTATION",
+              "message": "Estimated damage of $16,000 claimed with no receipts, photos of stolen items, or proof of ownership provided.",
+              "severity": "warning"
             },
             {
-              "code": "UNCERTAIN_TIMELINE",
-              "message": "Policyholder unsure of exact timing since shed is not checked daily",
+              "code": "EXCLUSION_MATCH",
+              "message": "Policy contains vacancy exclusion (EXCL-VACANCY). Adjuster must verify property has not been vacant for more than 60 consecutive days.",
+              "severity": "warning"
+            },
+            {
+              "code": "HIGH_VALUE_THEFT",
+              "message": "Theft claim exceeds $15,000. Requires verification of item values and ownership documentation.",
               "severity": "info"
             }
           ]
@@ -4808,6 +4374,6 @@ const FNOL_TRACES = [
     "model": "claude-sonnet-4-5",
     "error": null,
     "edge_case": "multiple minor risk indicators combined (no time of loss + high estimate) -> expect flag",
-    "latency_seconds": 28.01
+    "latency_seconds": 24.41
   }
 ];
